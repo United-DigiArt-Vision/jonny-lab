@@ -97,6 +97,13 @@ if [ -f ~/.config/gh/hosts.yml ]; then
     cp ~/.config/gh/hosts.yml "${BACKUP_DIR}/cli-configs/gh-hosts.yml" 2>/dev/null || true
 fi
 
+# 4b. Secrets (Credentials, API Keys etc.)
+echo "  → Secrets..."
+if [ -d ~/.openclaw/secrets ]; then
+    mkdir -p "${BACKUP_DIR}/secrets"
+    cp -r ~/.openclaw/secrets/* "${BACKUP_DIR}/secrets/" 2>/dev/null || true
+fi
+
 # 5. Backup-Manifest erstellen
 echo "  → Manifest..."
 cat > "${BACKUP_DIR}/MANIFEST.md" << EOF
