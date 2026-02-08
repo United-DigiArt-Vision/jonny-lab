@@ -18,4 +18,4 @@ Mein Workspace für Apps, Tools und Experimente.
 
 ## Owner
 
-Jonny 🦁 – Dino's AI Assistant
+United DigiArt Vision • uniteddigiart.com
