@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AquaTime — Handicap Swimming Event Manager</title>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      colors: {
+        aqua: { 50:'#ecfeff',100:'#cffafe',200:'#a5f3fc',300:'#67e8f9',400:'#22d3ee',500:'#06b6d4',600:'#0891b2',700:'#0e7490',800:'#155e75',900:'#164e63' }
+      }
+    }
+  }
+}
+</script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+body { font-family: 'Inter', sans-serif; }
+.tab-active { border-bottom: 3px solid #0891b2; color: #0891b2; font-weight: 600; }
+.fade-in { animation: fadeIn 0.3s ease-in; }
+@keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+</style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect, useCallback } = React;
+
+// Demo Data
+const DEMO_SWIMMERS = [
+  { id:1, name:"Liam O'Connor", age:34, club:"Bondi Barracudas", pb100m:62.5, handicap:0, gender:"M" },
+  { id:2, name:"Emma Thompson", age:28, club:"Bondi Barracudas", pb100m:68.2, handicap:5.7, gender:"F" },
+  { id:3, name:"Jack Mitchell", age:45, club:"Manly Dolphins", pb100m:72.1, handicap:9.6, gender:"M" },
+  { id:4, name:"Sophie Williams", age:31, club:"Bondi Barracudas", pb100m:70.5, handicap:8.0, gender:"F" },
+  { id:5, name:"Oliver Chen", age:22, club:"Sydney Stingrays", pb100m:58.3, handicap:-4.2, gender:"M" },
+  { id:6, name:"Chloe Roberts", age:39, club:"Manly Dolphins", pb100m:75.8, handicap:13.3, gender:"F" },
+  { id:7, name:"Noah Parker", age:52, club:"Sydney Stingrays", pb100m:80.2, handicap:17.7, gender:"M" },
+  { id:8, name:"Mia Anderson", age:26, club:"Bondi Barracudas", pb100m:65.1, handicap:2.6, gender:"F" },
+  { id:9, name:"Ethan Hughes", age:41, club:"Manly Dolphins", pb100m:69.7, handicap:7.2, gender:"M" },
+  { id:10, name:"Ava Wilson", age:33, club:"Sydney Stingrays", pb100m:71.3, handicap:8.8, gender:"F" },
+  { id:11, name:"William Brown", age:19, club:"Bondi Barracudas", pb100m:56.8, handicap:-5.7, gender:"M" },
+  { id:12, name:"Isabella Taylor", age:47, club:"Manly Dolphins", pb100m:78.4, handicap:15.9, gender:"F" },
+];
+
+const DEMO_EVENTS = [
+  { id:1, name:"Weekly Handicap #47", date:"2026-02-01", distance:"100m Freestyle", status:"completed",
+    results:[
+      {swimmerId:5,startDelay:0,finishTime:59.1,adjustedTime:63.3},
+      {swimmerId:11,startDelay:0,finishTime:57.2,adjustedTime:62.9},
+      {swimmerId:1,startDelay:4.2,finishTime:63.8,adjustedTime:63.8},
+      {swimmerId:8,startDelay:6.8,finishTime:66.0,adjustedTime:63.4},
+      {swimmerId:2,startDelay:10.0,finishTime:69.5,adjustedTime:63.8},
+      {swimmerId:9,startDelay:11.4,finishTime:70.9,adjustedTime:63.7},
+      {swimmerId:4,startDelay:12.2,finishTime:72.1,adjustedTime:64.1},
+      {swimmerId:10,startDelay:13.0,finishTime:72.8,adjustedTime:64.0},
+      {swimmerId:3,startDelay:13.8,finishTime:73.5,adjustedTime:63.9},
+      {swimmerId:6,startDelay:17.5,finishTime:77.2,adjustedTime:63.9},
+      {swimmerId:12,startDelay:20.1,finishTime:79.8,adjustedTime:63.9},
+      {swimmerId:7,startDelay:21.9,finishTime:82.1,adjustedTime:64.4},
+    ]
+  },
+  { id:2, name:"Weekly Handicap #48", date:"2026-02-08", distance:"100m Freestyle", status:"upcoming", results:[] },
+];
+
+function formatTime(seconds) {
+  if (!seconds && seconds !== 0) return '—';
+  const mins = Math.floor(seconds / 60);
+  const secs = (seconds % 60).toFixed(1);
+  return mins > 0 ? `${mins}:${secs.padStart(4,'0')}` : `${secs}s`;
+}
+
+function Badge({children, color="blue"}) {
+  const colors = {
+    blue:"bg-aqua-100 text-aqua-800",
+    green:"bg-green-100 text-green-800",
+    yellow:"bg-yellow-100 text-yellow-800",
+    red:"bg-red-100 text-red-800",
+    gray:"bg-gray-100 text-gray-600",
+    purple:"bg-purple-100 text-purple-800"
+  };
+  return <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${colors[color]}`}>{children}</span>;
+}
+
+// ===== DASHBOARD =====
+function Dashboard({swimmers, events, setTab}) {
+  const completed = events.filter(e=>e.status==='completed');
+  const upcoming = events.filter(e=>e.status==='upcoming');
+  const lastEvent = completed[completed.length-1];
+  const topResults = lastEvent ? [...lastEvent.results].sort((a,b)=>a.adjustedTime-b.adjustedTime).slice(0,3) : [];
+
+  return <div className="fade-in space-y-6">
+    {/* Stats */}
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      {[
+        {label:"Swimmers",value:swimmers.length,icon:"🏊",color:"bg-aqua-500"},
+        {label:"Events",value:events.length,icon:"🏆",color:"bg-blue-500"},
+        {label:"Completed",value:completed.length,icon:"✅",color:"bg-green-500"},
+        {label:"Upcoming",value:upcoming.length,icon:"📅",color:"bg-orange-500"},
+      ].map((s,i)=><div key={i} className="bg-white rounded-xl p-4 shadow-sm border">
+        <div className="flex items-center justify-between">
+          <div><p className="text-sm text-gray-500">{s.label}</p><p className="text-2xl font-bold">{s.value}</p></div>
+          <div className={`w-10 h-10 ${s.color} rounded-lg flex items-center justify-center text-white text-lg`}>{s.icon}</div>
+        </div>
+      </div>)}
+    </div>
+
+    {/* Last Results */}
+    {lastEvent && <div className="bg-white rounded-xl p-6 shadow-sm border">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="font-semibold text-lg">🏆 Last Event: {lastEvent.name}</h3>
+        <Badge color="green">Completed</Badge>
+      </div>
+      <p className="text-sm text-gray-500 mb-4">{lastEvent.date} • {lastEvent.distance} • {lastEvent.results.length} swimmers</p>
+      <div className="space-y-3">
+        {topResults.map((r,i)=>{
+          const sw = swimmers.find(s=>s.id===r.swimmerId);
+          const medals = ['🥇','🥈','🥉'];
+          return <div key={i} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+            <span className="text-2xl">{medals[i]}</span>
+            <div className="flex-1">
+              <p className="font-medium">{sw?.name}</p>
+              <p className="text-sm text-gray-500">{sw?.club}</p>
+            </div>
+            <div className="text-right">
+              <p className="font-mono font-semibold text-aqua-700">{formatTime(r.adjustedTime)}</p>
+              <p className="text-xs text-gray-400">Raw: {formatTime(r.finishTime)}</p>
+            </div>
+          </div>;
+        })}
+      </div>
+      <button onClick={()=>setTab('results')} className="mt-4 text-aqua-600 text-sm font-medium hover:underline">View full results →</button>
+    </div>}
+
+    {/* Upcoming */}
+    {upcoming.length > 0 && <div className="bg-white rounded-xl p-6 shadow-sm border">
+      <h3 className="font-semibold text-lg mb-4">📅 Upcoming Events</h3>
+      {upcoming.map(e=><div key={e.id} className="flex items-center justify-between p-3 bg-aqua-50 rounded-lg">
+        <div>
+          <p className="font-medium">{e.name}</p>
+          <p className="text-sm text-gray-500">{e.date} • {e.distance}</p>
+        </div>
+        <button onClick={()=>setTab('race')} className="bg-aqua-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-aqua-700 transition">Start Race</button>
+      </div>)}
+    </div>}
+  </div>;
+}
+
+// ===== SWIMMERS =====
+function Swimmers({swimmers, setSwimmers}) {
+  const [showForm, setShowForm] = useState(false);
+  const [form, setForm] = useState({name:'',age:'',club:'',pb100m:'',gender:'M'});
+  const [search, setSearch] = useState('');
+
+  const filtered = swimmers.filter(s=>
+    s.name.toLowerCase().includes(search.toLowerCase()) ||
+    s.club.toLowerCase().includes(search.toLowerCase())
+  );
+
+  const addSwimmer = () => {
+    if(!form.name||!form.pb100m) return;
+    const fastest = Math.min(...swimmers.map(s=>s.pb100m));
+    const pb = parseFloat(form.pb100m);
+    const newS = { id:Date.now(), ...form, age:parseInt(form.age)||0, pb100m:pb, handicap: parseFloat((pb - fastest).toFixed(1)) };
+    setSwimmers([...swimmers, newS]);
+    setForm({name:'',age:'',club:'',pb100m:'',gender:'M'});
+    setShowForm(false);
+  };
+
+  return <div className="fade-in space-y-4">
+    <div className="flex flex-col sm:flex-row gap-3 justify-between">
+      <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search swimmers..." className="border rounded-lg px-4 py-2 flex-1 focus:ring-2 focus:ring-aqua-300 outline-none" />
+      <button onClick={()=>setShowForm(!showForm)} className="bg-aqua-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-aqua-700 transition whitespace-nowrap">+ Add Swimmer</button>
+    </div>
+
+    {showForm && <div className="bg-white rounded-xl p-4 shadow-sm border space-y-3">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+        <input value={form.name} onChange={e=>setForm({...form,name:e.target.value})} placeholder="Full Name" className="border rounded-lg px-3 py-2 col-span-2 md:col-span-1" />
+        <input value={form.age} onChange={e=>setForm({...form,age:e.target.value})} placeholder="Age" type="number" className="border rounded-lg px-3 py-2" />
+        <input value={form.club} onChange={e=>setForm({...form,club:e.target.value})} placeholder="Club" className="border rounded-lg px-3 py-2" />
+        <input value={form.pb100m} onChange={e=>setForm({...form,pb100m:e.target.value})} placeholder="PB 100m (sec)" type="number" step="0.1" className="border rounded-lg px-3 py-2" />
+        <select value={form.gender} onChange={e=>setForm({...form,gender:e.target.value})} className="border rounded-lg px-3 py-2">
+          <option value="M">Male</option><option value="F">Female</option>
+        </select>
+      </div>
+      <div className="flex gap-2">
+        <button onClick={addSwimmer} className="bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-green-700">Save</button>
+        <button onClick={()=>setShowForm(false)} className="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-300">Cancel</button>
+      </div>
+    </div>}
+
+    <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead className="bg-gray-50 border-b">
+            <tr>
+              <th className="text-left px-4 py-3 font-medium text-gray-600">Swimmer</th>
+              <th className="text-left px-4 py-3 font-medium text-gray-600 hidden sm:table-cell">Club</th>
+              <th className="text-center px-4 py-3 font-medium text-gray-600">Age</th>
+              <th className="text-center px-4 py-3 font-medium text-gray-600">PB (100m)</th>
+              <th className="text-center px-4 py-3 font-medium text-gray-600">Handicap</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filtered.map(s=><tr key={s.id} className="border-b hover:bg-gray-50 transition">
+              <td className="px-4 py-3">
+                <div className="font-medium">{s.name}</div>
+                <div className="text-xs text-gray-400 sm:hidden">{s.club}</div>
+              </td>
+              <td className="px-4 py-3 text-gray-600 hidden sm:table-cell">{s.club}</td>
+              <td className="px-4 py-3 text-center">{s.age}</td>
+              <td className="px-4 py-3 text-center font-mono">{formatTime(s.pb100m)}</td>
+              <td className="px-4 py-3 text-center">
+                {s.handicap > 0 ? <Badge color="blue">+{s.handicap}s</Badge> :
+                 s.handicap < 0 ? <Badge color="green">{s.handicap}s</Badge> :
+                 <Badge color="gray">Base</Badge>}
+              </td>
+            </tr>)}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <p className="text-sm text-gray-400 text-center">{filtered.length} of {swimmers.length} swimmers</p>
+  </div>;
+}
+
+// ===== RACE MODE =====
+function RaceMode({swimmers, events, setEvents}) {
+  const [selected, setSelected] = useState(swimmers.map(s=>s.id));
+  const [raceState, setRaceState] = useState('setup'); // setup, running, finished
+  const [raceData, setRaceData] = useState([]);
+  const [elapsed, setElapsed] = useState(0);
+  const [startTime, setStartTime] = useState(null);
+
+  const toggleSwimmer = (id) => {
+    setSelected(prev => prev.includes(id) ? prev.filter(x=>x!==id) : [...prev, id]);
+  };
+
+  const startRace = () => {
+    const participants = swimmers.filter(s=>selected.includes(s.id));
+    const fastest = Math.min(...participants.map(s=>s.pb100m));
+    const data = participants.map(s => ({
+      swimmerId: s.id,
+      name: s.name,
+      club: s.club,
+      pb: s.pb100m,
+      startDelay: parseFloat((s.pb100m - fastest).toFixed(1)),
+      finishTime: null,
+      adjustedTime: null,
+      started: false,
+      finished: false,
+    })).sort((a,b) => b.startDelay - a.startDelay); // Slowest starts first (delay=0)
+    
+    // Invert: slowest swimmer has delay 0, fastest has max delay
+    const maxDelay = Math.max(...data.map(d=>d.startDelay));
+    data.forEach(d => { d.startDelay = parseFloat((maxDelay - d.startDelay).toFixed(1)); });
+    
+    setRaceData(data);
+    setRaceState('running');
+    setStartTime(Date.now());
+  };
+
+  useEffect(() => {
+    if (raceState !== 'running') return;
+    const interval = setInterval(() => {
+      setElapsed((Date.now() - startTime) / 1000);
+    }, 100);
+    return () => clearInterval(interval);
+  }, [raceState, startTime]);
+
+  const recordFinish = (swimmerId) => {
+    const now = elapsed;
+    setRaceData(prev => prev.map(d => {
+      if (d.swimmerId === swimmerId && !d.finished) {
+        const finishTime = parseFloat(now.toFixed(1));
+        const adjustedTime = parseFloat((finishTime - d.startDelay).toFixed(1));
+        return {...d, finishTime, adjustedTime, finished: true};
+      }
+      return d;
+    }));
+  };
+
+  const allFinished = raceData.length > 0 && raceData.every(d=>d.finished);
+
+  const saveResults = () => {
+    const newEvent = {
+      id: Date.now(),
+      name: `Weekly Handicap #${events.length + 47}`,
+      date: new Date().toISOString().split('T')[0],
+      distance: "100m Freestyle",
+      status: "completed",
+      results: raceData.map(d=>({swimmerId:d.swimmerId, startDelay:d.startDelay, finishTime:d.finishTime, adjustedTime:d.adjustedTime}))
+    };
+    setEvents(prev => [...prev.filter(e=>e.status==='completed'), newEvent]);
+    setRaceState('setup');
+    setRaceData([]);
+    setElapsed(0);
+  };
+
+  if (raceState === 'setup') {
+    return <div className="fade-in space-y-4">
+      <div className="bg-white rounded-xl p-6 shadow-sm border">
+        <h3 className="font-semibold text-lg mb-2">🏊 New Race Setup</h3>
+        <p className="text-sm text-gray-500 mb-4">Select swimmers for this race. Staggered start times are calculated automatically.</p>
+        <div className="flex gap-2 mb-4">
+          <button onClick={()=>setSelected(swimmers.map(s=>s.id))} className="text-sm text-aqua-600 hover:underline">Select All</button>
+          <span className="text-gray-300">|</span>
+          <button onClick={()=>setSelected([])} className="text-sm text-gray-500 hover:underline">Clear</button>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          {swimmers.map(s=><label key={s.id} className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition ${selected.includes(s.id)?'bg-aqua-50 border-aqua-300':'hover:bg-gray-50'}`}>
+            <input type="checkbox" checked={selected.includes(s.id)} onChange={()=>toggleSwimmer(s.id)} className="w-4 h-4 accent-aqua-600" />
+            <div className="flex-1">
+              <p className="font-medium text-sm">{s.name}</p>
+              <p className="text-xs text-gray-400">{s.club} • PB: {formatTime(s.pb100m)}</p>
+            </div>
+          </label>)}
+        </div>
+      </div>
+      <button onClick={startRace} disabled={selected.length<2} className="w-full bg-aqua-600 text-white py-3 rounded-xl font-semibold text-lg hover:bg-aqua-700 transition disabled:opacity-40 disabled:cursor-not-allowed">
+        🏁 Start Race ({selected.length} swimmers)
+      </button>
+    </div>;
+  }
+
+  const sorted = [...raceData].sort((a,b) => {
+    if (a.finished && b.finished) return a.adjustedTime - b.adjustedTime;
+    if (a.finished) return -1;
+    if (b.finished) return 1;
+    return a.startDelay - b.startDelay;
+  });
+
+  return <div className="fade-in space-y-4">
+    {/* Timer */}
+    <div className="bg-gradient-to-r from-aqua-700 to-aqua-900 rounded-xl p-6 text-white text-center">
+      <p className="text-sm opacity-80 mb-1">Race Time</p>
+      <p className="text-5xl font-mono font-bold">{elapsed.toFixed(1)}s</p>
+      <p className="text-sm opacity-60 mt-2">{raceData.filter(d=>d.finished).length}/{raceData.length} finished</p>
+    </div>
+
+    {/* Swimmer List */}
+    <div className="space-y-2">
+      {sorted.map((d,i) => {
+        const shouldHaveStarted = elapsed >= d.startDelay;
+        return <div key={d.swimmerId} className={`bg-white rounded-xl p-4 shadow-sm border flex items-center gap-3 transition ${d.finished ? 'opacity-70' : shouldHaveStarted ? 'border-aqua-400 bg-aqua-50' : ''}`}>
+          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${d.finished ? 'bg-green-100 text-green-700' : shouldHaveStarted ? 'bg-aqua-100 text-aqua-700' : 'bg-gray-100 text-gray-400'}`}>
+            {d.finished ? '✓' : i+1}
+          </div>
+          <div className="flex-1">
+            <p className="font-medium text-sm">{d.name}</p>
+            <p className="text-xs text-gray-400">Start: +{d.startDelay}s {shouldHaveStarted && !d.finished ? '• 🏊 SWIMMING' : ''}</p>
+          </div>
+          {d.finished ? (
+            <div className="text-right">
+              <p className="font-mono font-semibold text-green-700">{formatTime(d.adjustedTime)}</p>
+              <p className="text-xs text-gray-400">Raw: {formatTime(d.finishTime)}</p>
+            </div>
+          ) : (
+            <button onClick={()=>recordFinish(d.swimmerId)} disabled={!shouldHaveStarted}
+              className="bg-aqua-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-aqua-700 transition disabled:opacity-30 disabled:cursor-not-allowed">
+              Finish
+            </button>
+          )}
+        </div>;
+      })}
+    </div>
+
+    {allFinished && <button onClick={saveResults} className="w-full bg-green-600 text-white py-3 rounded-xl font-semibold text-lg hover:bg-green-700 transition">
+      💾 Save Results
+    </button>}
+  </div>;
+}
+
+// ===== RESULTS =====
+function Results({swimmers, events}) {
+  const completed = events.filter(e=>e.status==='completed');
+  const [selectedEvent, setSelectedEvent] = useState(completed[completed.length-1]?.id);
+  const event = completed.find(e=>e.id===selectedEvent);
+
+  if (!event) return <div className="fade-in text-center py-12 text-gray-400">No completed events yet. Run a race first!</div>;
+
+  const sorted = [...event.results].sort((a,b)=>a.adjustedTime-b.adjustedTime);
+
+  return <div className="fade-in space-y-4">
+    <div className="flex gap-2 overflow-x-auto pb-2">
+      {completed.map(e=><button key={e.id} onClick={()=>setSelectedEvent(e.id)}
+        className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition ${e.id===selectedEvent?'bg-aqua-600 text-white':'bg-white border hover:bg-gray-50'}`}>
+        {e.name}
+      </button>)}
+    </div>
+
+    <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
+      <div className="p-4 border-b bg-gray-50">
+        <h3 className="font-semibold">{event.name}</h3>
+        <p className="text-sm text-gray-500">{event.date} • {event.distance}</p>
+      </div>
+      <table className="w-full text-sm">
+        <thead className="border-b bg-gray-50">
+          <tr>
+            <th className="text-center px-3 py-2 font-medium text-gray-600 w-12">#</th>
+            <th className="text-left px-3 py-2 font-medium text-gray-600">Swimmer</th>
+            <th className="text-center px-3 py-2 font-medium text-gray-600">Start</th>
+            <th className="text-center px-3 py-2 font-medium text-gray-600">Raw</th>
+            <th className="text-center px-3 py-2 font-medium text-gray-600">Adjusted</th>
+          </tr>
+        </thead>
+        <tbody>
+          {sorted.map((r,i)=>{
+            const sw = swimmers.find(s=>s.id===r.swimmerId);
+            const medal = i<3 ? ['🥇','🥈','🥉'][i] : i+1;
+            return <tr key={r.swimmerId} className={`border-b ${i<3?'bg-yellow-50/50':''}`}>
+              <td className="text-center px-3 py-3 text-lg">{medal}</td>
+              <td className="px-3 py-3"><span className="font-medium">{sw?.name}</span><br/><span className="text-xs text-gray-400">{sw?.club}</span></td>
+              <td className="text-center px-3 py-3 font-mono text-gray-500">+{r.startDelay}s</td>
+              <td className="text-center px-3 py-3 font-mono">{formatTime(r.finishTime)}</td>
+              <td className="text-center px-3 py-3 font-mono font-semibold text-aqua-700">{formatTime(r.adjustedTime)}</td>
+            </tr>;
+          })}
+        </tbody>
+      </table>
+    </div>
+  </div>;
+}
+
+// ===== MAIN APP =====
+function App() {
+  const [tab, setTab] = useState('dashboard');
+  const [swimmers, setSwimmers] = useState(DEMO_SWIMMERS);
+  const [events, setEvents] = useState(DEMO_EVENTS);
+
+  const tabs = [
+    {id:'dashboard', label:'Dashboard', icon:'📊'},
+    {id:'swimmers', label:'Swimmers', icon:'🏊'},
+    {id:'race', label:'Race', icon:'🏁'},
+    {id:'results', label:'Results', icon:'🏆'},
+  ];
+
+  return <div className="max-w-4xl mx-auto px-4 pb-8">
+    {/* Header */}
+    <header className="bg-gradient-to-r from-aqua-700 to-aqua-900 -mx-4 px-6 py-5 mb-6 shadow-lg">
+      <div className="max-w-4xl mx-auto flex items-center gap-3">
+        <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center text-2xl">🏊</div>
+        <div>
+          <h1 className="text-white font-bold text-xl">AquaTime</h1>
+          <p className="text-aqua-200 text-xs">Handicap Swimming Event Manager</p>
+        </div>
+        <div className="ml-auto">
+          <Badge color="blue">Demo</Badge>
+        </div>
+      </div>
+    </header>
+
+    {/* Tabs */}
+    <nav className="flex border-b mb-6 -mx-4 px-4 overflow-x-auto">
+      {tabs.map(t=><button key={t.id} onClick={()=>setTab(t.id)}
+        className={`px-4 py-3 text-sm whitespace-nowrap transition ${tab===t.id?'tab-active':'text-gray-500 hover:text-gray-700'}`}>
+        <span className="mr-1.5">{t.icon}</span>{t.label}
+      </button>)}
+    </nav>
+
+    {/* Content */}
+    {tab==='dashboard' && <Dashboard swimmers={swimmers} events={events} setTab={setTab} />}
+    {tab==='swimmers' && <Swimmers swimmers={swimmers} setSwimmers={setSwimmers} />}
+    {tab==='race' && <RaceMode swimmers={swimmers} events={events} setEvents={setEvents} />}
+    {tab==='results' && <Results swimmers={swimmers} events={events} />}
+
+    {/* Footer */}
+    <footer className="mt-12 text-center text-xs text-gray-400 border-t pt-4">
+      AquaTime Demo • Built by United DigiArt Vision • <a href="https://uniteddigiart.com" className="text-aqua-600 hover:underline">uniteddigiart.com</a>
+    </footer>
+  </div>;
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>
