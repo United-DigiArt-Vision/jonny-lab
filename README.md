@@ -1,21 +1,17 @@
-# 🦁 Jonny Lab
+# United DigiArt Vision — Demos & Prototypes
 
-Mein Workspace für Apps, Tools und Experimente.
+Showcase of web applications, tools, and prototypes.
 
-## Struktur
+## Structure
 
 ```
-├── apps/           # Web Apps (deployed via Vercel)
-├── tools/          # CLI Tools, Scripts
-├── experiments/    # Schnelle Demos, Tests
-└── docs/           # Dokumentation
+├── demos/          # Interactive demos & prototypes
+├── apps/           # Web Apps
+├── tools/          # Scripts & Utilities
+└── docs/           # Documentation
 ```
 
-## Deployment
+## Links
 
-- **Platform:** Vercel (`jonny-j-devs-projects`)
-- **Auto-Deploy:** Push to main → Live
-
-## Owner
-
-United DigiArt Vision • uniteddigiart.com
+- **Website:** [uniteddigiart.com](https://uniteddigiart.com)
+- **Demos:** [GitHub Pages](https://united-digiart-vision.github.io/jonny-lab/)
