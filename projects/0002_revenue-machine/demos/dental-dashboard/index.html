@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zahnarztpraxis Dr. Müller — Praxis-Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --primary:#2B7A9E;--primary-light:#E8F4F8;--primary-dark:#1D5F7A;
+  --accent:#4DA8C4;--success:#34A853;--warning:#F5A623;--danger:#E74C3C;
+  --bg:#F4F7FA;--white:#FFFFFF;--gray-50:#F8FAFC;--gray-100:#F1F5F9;
+  --gray-200:#E2E8F0;--gray-300:#CBD5E1;--gray-400:#94A3B8;--gray-500:#64748B;
+  --gray-600:#475569;--gray-700:#334155;--gray-800:#1E293B;
+  --shadow:0 1px 3px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.06);
+  --shadow-md:0 4px 6px rgba(0,0,0,.07),0 2px 4px rgba(0,0,0,.06);
+  --shadow-lg:0 10px 15px rgba(0,0,0,.1),0 4px 6px rgba(0,0,0,.05);
+  --radius:10px;--radius-sm:6px;
+}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--gray-800);line-height:1.5;min-height:100vh}
+
+/* Sidebar */
+.sidebar{position:fixed;left:0;top:0;bottom:0;width:260px;background:var(--white);border-right:1px solid var(--gray-200);z-index:100;transition:transform .3s ease;display:flex;flex-direction:column}
+.sidebar-header{padding:24px 20px;border-bottom:1px solid var(--gray-200);display:flex;align-items:center;gap:12px}
+.sidebar-logo{width:40px;height:40px;background:var(--primary);border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;color:var(--white);font-weight:700;font-size:18px}
+.sidebar-title{font-size:14px;font-weight:600;color:var(--gray-800);line-height:1.3}
+.sidebar-subtitle{font-size:11px;color:var(--gray-400);font-weight:400}
+.sidebar-nav{flex:1;padding:12px 10px;overflow-y:auto}
+.nav-section{font-size:10px;font-weight:600;color:var(--gray-400);text-transform:uppercase;letter-spacing:.8px;padding:16px 12px 6px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:var(--radius-sm);cursor:pointer;font-size:13px;color:var(--gray-600);transition:all .15s;font-weight:500;position:relative}
+.nav-item:hover{background:var(--gray-100);color:var(--gray-800)}
+.nav-item.active{background:var(--primary-light);color:var(--primary-dark);font-weight:600}
+.nav-item .material-icons-round{font-size:20px}
+.nav-badge{position:absolute;right:10px;background:var(--danger);color:var(--white);font-size:10px;font-weight:600;padding:1px 6px;border-radius:10px}
+.sidebar-footer{padding:16px 20px;border-top:1px solid var(--gray-200);display:flex;align-items:center;gap:10px}
+.avatar{width:32px;height:32px;border-radius:50%;background:var(--accent);color:var(--white);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;flex-shrink:0}
+.sidebar-user{font-size:12px;font-weight:500;color:var(--gray-700)}
+.sidebar-role{font-size:11px;color:var(--gray-400)}
+
+/* Main */
+.main{margin-left:260px;min-height:100vh;transition:margin .3s ease}
+.topbar{position:sticky;top:0;background:rgba(255,255,255,.85);backdrop-filter:blur(10px);border-bottom:1px solid var(--gray-200);padding:14px 28px;display:flex;align-items:center;justify-content:space-between;z-index:50}
+.topbar-left{display:flex;align-items:center;gap:12px}
+.menu-btn{display:none;background:none;border:none;cursor:pointer;color:var(--gray-600);padding:4px}
+.topbar h1{font-size:18px;font-weight:600;color:var(--gray-800)}
+.topbar-right{display:flex;align-items:center;gap:16px}
+.topbar-date{font-size:13px;color:var(--gray-500)}
+.icon-btn{width:36px;height:36px;border-radius:50%;border:none;background:var(--gray-100);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--gray-600);position:relative;transition:all .15s}
+.icon-btn:hover{background:var(--gray-200)}
+.icon-btn .dot{position:absolute;top:6px;right:6px;width:8px;height:8px;background:var(--danger);border-radius:50%;border:2px solid var(--white)}
+
+.content{padding:24px 28px;max-width:1400px}
+
+/* Page sections */
+.page{display:none}.page.active{display:block}
+
+/* Cards */
+.card{background:var(--white);border-radius:var(--radius);border:1px solid var(--gray-200);padding:20px;transition:box-shadow .2s}
+.card:hover{box-shadow:var(--shadow-md)}
+.card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.card-title{font-size:14px;font-weight:600;color:var(--gray-800)}
+.card-badge{font-size:11px;padding:3px 10px;border-radius:20px;font-weight:500}
+
+/* Grid */
+.grid{display:grid;gap:20px}
+.grid-4{grid-template-columns:repeat(4,1fr)}
+.grid-3{grid-template-columns:repeat(3,1fr)}
+.grid-2{grid-template-columns:repeat(2,1fr)}
+.grid-1-2{grid-template-columns:1fr 2fr}
+
+/* KPI Cards */
+.kpi{text-align:center;padding:24px 16px}
+.kpi-icon{width:44px;height:44px;border-radius:var(--radius);display:inline-flex;align-items:center;justify-content:center;margin-bottom:12px}
+.kpi-value{font-size:28px;font-weight:700;color:var(--gray-800);line-height:1}
+.kpi-label{font-size:12px;color:var(--gray-500);margin-top:4px;font-weight:500}
+.kpi-change{font-size:11px;margin-top:8px;font-weight:600;display:inline-flex;align-items:center;gap:2px;padding:2px 8px;border-radius:20px}
+.kpi-change.up{color:var(--success);background:#E8F5E9}
+.kpi-change.down{color:var(--danger);background:#FDECEA}
+
+/* Progress */
+.progress-bar{height:8px;background:var(--gray-200);border-radius:4px;overflow:hidden;margin-top:8px}
+.progress-fill{height:100%;border-radius:4px;transition:width .6s ease}
+
+/* Status badges */
+.badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px}
+.badge-green{background:#E8F5E9;color:#2E7D32}
+.badge-yellow{background:#FFF8E1;color:#F57F17}
+.badge-red{background:#FDECEA;color:#C62828}
+.badge-blue{background:var(--primary-light);color:var(--primary-dark)}
+.badge-gray{background:var(--gray-100);color:var(--gray-500)}
+
+/* Tables */
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;font-weight:600;color:var(--gray-500);font-size:11px;text-transform:uppercase;letter-spacing:.5px;padding:10px 12px;border-bottom:2px solid var(--gray-200)}
+td{padding:12px;border-bottom:1px solid var(--gray-100);color:var(--gray-700)}
+tr:hover td{background:var(--gray-50)}
+.priority-dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:6px}
+
+/* Task list */
+.task-item{display:flex;align-items:flex-start;gap:12px;padding:14px 0;border-bottom:1px solid var(--gray-100)}
+.task-item:last-child{border-bottom:none}
+.task-check{width:20px;height:20px;border-radius:50%;border:2px solid var(--gray-300);cursor:pointer;flex-shrink:0;margin-top:1px;transition:all .15s}
+.task-check.done{background:var(--success);border-color:var(--success)}
+.task-check.done::after{content:'✓';color:var(--white);font-size:12px;display:flex;align-items:center;justify-content:center;height:100%}
+.task-content{flex:1}
+.task-title{font-size:13px;font-weight:500;color:var(--gray-800)}
+.task-check.done+.task-content .task-title{text-decoration:line-through;color:var(--gray-400)}
+.task-meta{font-size:11px;color:var(--gray-400);margin-top:3px;display:flex;gap:12px;align-items:center}
+
+/* Doc tree */
+.doc-folder{margin-bottom:4px}
+.doc-folder-header{display:flex;align-items:center;gap:8px;padding:8px 12px;cursor:pointer;border-radius:var(--radius-sm);font-size:13px;font-weight:600;color:var(--gray-700);transition:background .15s}
+.doc-folder-header:hover{background:var(--gray-100)}
+.doc-folder-header .material-icons-round{font-size:20px;color:var(--warning)}
+.doc-children{padding-left:32px}
+.doc-file{display:flex;align-items:center;gap:8px;padding:6px 12px;font-size:13px;color:var(--gray-600);cursor:pointer;border-radius:var(--radius-sm)}
+.doc-file:hover{background:var(--gray-100);color:var(--gray-800)}
+.doc-file .material-icons-round{font-size:18px;color:var(--gray-400)}
+.doc-file .badge{margin-left:auto}
+
+/* Messages */
+.msg{display:flex;gap:12px;padding:16px 0;border-bottom:1px solid var(--gray-100)}
+.msg:last-child{border-bottom:none}
+.msg-body{flex:1}
+.msg-header{display:flex;align-items:center;gap:8px;margin-bottom:4px}
+.msg-name{font-size:13px;font-weight:600;color:var(--gray-800)}
+.msg-time{font-size:11px;color:var(--gray-400)}
+.msg-text{font-size:13px;color:var(--gray-600);line-height:1.6}
+.msg-input{display:flex;gap:10px;margin-top:16px;padding-top:16px;border-top:1px solid var(--gray-200)}
+.msg-input input{flex:1;padding:10px 14px;border:1px solid var(--gray-200);border-radius:var(--radius);font-size:13px;font-family:inherit;outline:none;transition:border .15s}
+.msg-input input:focus{border-color:var(--primary)}
+.msg-input button{padding:10px 20px;background:var(--primary);color:var(--white);border:none;border-radius:var(--radius);font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;transition:background .15s}
+.msg-input button:hover{background:var(--primary-dark)}
+
+/* Status overview */
+.status-row{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--gray-100)}
+.status-row:last-child{border-bottom:none}
+.status-label{font-size:13px;font-weight:500;color:var(--gray-700);display:flex;align-items:center;gap:8px}
+.status-label .material-icons-round{font-size:18px;color:var(--gray-400)}
+
+/* Charts placeholder */
+.chart-bar{display:flex;align-items:flex-end;gap:8px;height:160px;padding-top:10px}
+.chart-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px}
+.chart-col .bar{width:100%;border-radius:4px 4px 0 0;background:var(--accent);min-height:4px;transition:height .6s ease}
+.chart-col .label{font-size:10px;color:var(--gray-400);font-weight:500}
+.chart-col .val{font-size:10px;color:var(--gray-600);font-weight:600}
+
+/* Responsive */
+@media(max-width:1024px){
+  .grid-4{grid-template-columns:repeat(2,1fr)}
+  .grid-3{grid-template-columns:repeat(2,1fr)}
+  .grid-1-2{grid-template-columns:1fr}
+}
+@media(max-width:768px){
+  .sidebar{transform:translateX(-100%)}
+  .sidebar.open{transform:translateX(0)}
+  .sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.3);z-index:99}
+  .sidebar-overlay.open{display:block}
+  .main{margin-left:0}
+  .menu-btn{display:flex}
+  .content{padding:16px}
+  .grid-4,.grid-3,.grid-2{grid-template-columns:1fr}
+  .topbar{padding:12px 16px}
+}
+
+/* Animations */
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.page.active{animation:fadeIn .3s ease}
+</style>
+</head>
+<body>
+
+<div class="sidebar-overlay" id="overlay" onclick="toggleSidebar()"></div>
+
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <div class="sidebar-logo">ZM</div>
+    <div>
+      <div class="sidebar-title">Zahnarztpraxis<br>Dr. Müller</div>
+    </div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-section">Übersicht</div>
+    <div class="nav-item active" data-page="dashboard">
+      <span class="material-icons-round">dashboard</span>Dashboard
+    </div>
+    <div class="nav-item" data-page="tasks">
+      <span class="material-icons-round">task_alt</span>Aufgaben
+      <span class="nav-badge">5</span>
+    </div>
+    <div class="nav-item" data-page="documents">
+      <span class="material-icons-round">folder</span>Dokumente
+    </div>
+    <div class="nav-section">Verwaltung</div>
+    <div class="nav-item" data-page="qm">
+      <span class="material-icons-round">verified</span>Qualitätsmanagement
+    </div>
+    <div class="nav-item" data-page="kpi">
+      <span class="material-icons-round">analytics</span>Kennzahlen
+    </div>
+    <div class="nav-item" data-page="messages">
+      <span class="material-icons-round">chat</span>Nachrichten
+      <span class="nav-badge">2</span>
+    </div>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="avatar">NB</div>
+    <div>
+      <div class="sidebar-user">Nebyat B.</div>
+      <div class="sidebar-role">Praxismanagerin</div>
+    </div>
+  </div>
+</aside>
+
+<main class="main">
+  <header class="topbar">
+    <div class="topbar-left">
+      <button class="menu-btn" onclick="toggleSidebar()">
+        <span class="material-icons-round">menu</span>
+      </button>
+      <h1 id="pageTitle">Dashboard</h1>
+    </div>
+    <div class="topbar-right">
+      <span class="topbar-date" id="todayDate"></span>
+      <button class="icon-btn"><span class="material-icons-round">notifications</span><span class="dot"></span></button>
+    </div>
+  </header>
+
+  <div class="content">
+
+    <!-- ===== DASHBOARD ===== -->
+    <div class="page active" id="page-dashboard">
+      <div class="grid grid-4" style="margin-bottom:20px">
+        <div class="card kpi">
+          <div class="kpi-icon" style="background:#E8F5E9"><span class="material-icons-round" style="color:var(--success)">check_circle</span></div>
+          <div class="kpi-value">87%</div>
+          <div class="kpi-label">QM-Erfüllung</div>
+          <div class="kpi-change up">▲ 4% zum Vormonat</div>
+        </div>
+        <div class="card kpi">
+          <div class="kpi-icon" style="background:#FFF8E1"><span class="material-icons-round" style="color:var(--warning)">assignment</span></div>
+          <div class="kpi-value">12</div>
+          <div class="kpi-label">Offene Aufgaben</div>
+          <div class="kpi-change down">▲ 3 neue diese Woche</div>
+        </div>
+        <div class="card kpi">
+          <div class="kpi-icon" style="background:var(--primary-light)"><span class="material-icons-round" style="color:var(--primary)">description</span></div>
+          <div class="kpi-value">34</div>
+          <div class="kpi-label">Dokumente</div>
+          <div class="kpi-change up">Alle aktuell</div>
+        </div>
+        <div class="card kpi">
+          <div class="kpi-icon" style="background:#F3E5F5"><span class="material-icons-round" style="color:#8E24AA">groups</span></div>
+          <div class="kpi-value">6</div>
+          <div class="kpi-label">Teammitglieder</div>
+          <div class="kpi-change up" style="background:var(--primary-light);color:var(--primary)">Vollständig</div>
+        </div>
+      </div>
+
+      <div class="grid grid-2" style="margin-bottom:20px">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Status-Übersicht</span>
+            <span class="badge badge-blue">Aktuell</span>
+          </div>
+          <div class="status-row">
+            <span class="status-label"><span class="material-icons-round">verified</span>QM-Handbuch</span>
+            <span class="badge badge-green">● Aktuell</span>
+          </div>
+          <div class="status-row">
+            <span class="status-label"><span class="material-icons-round">medical_services</span>Hygienemanagement</span>
+            <span class="badge badge-green">● Aktuell</span>
+          </div>
+          <div class="status-row">
+            <span class="status-label"><span class="material-icons-round">playlist_add_check</span>Arbeitsanweisungen</span>
+            <span class="badge badge-yellow">● 2 überfällig</span>
+          </div>
+          <div class="status-row">
+            <span class="status-label"><span class="material-icons-round">school</span>Fortbildungen</span>
+            <span class="badge badge-green">● Plan erstellt</span>
+          </div>
+          <div class="status-row">
+            <span class="status-label"><span class="material-icons-round">gpp_good</span>MPG-Dokumentation</span>
+            <span class="badge badge-yellow">● Prüfung offen</span>
+          </div>
+          <div class="status-row">
+            <span class="status-label"><span class="material-icons-round">event_available</span>Begehung (nächste)</span>
+            <span class="badge badge-blue">15.04.2026</span>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Aufgaben diese Woche</span>
+            <span class="badge badge-yellow">5 offen</span>
+          </div>
+          <div class="task-item">
+            <div class="task-check done"></div>
+            <div class="task-content">
+              <div class="task-title">Sterilisator-Wartungsprotokoll aktualisieren</div>
+              <div class="task-meta"><span>Erledigt</span><span>Fr. Schneider</span></div>
+            </div>
+          </div>
+          <div class="task-item">
+            <div class="task-check"></div>
+            <div class="task-content">
+              <div class="task-title">Arbeitsanweisung Prophylaxe überarbeiten</div>
+              <div class="task-meta"><span class="badge badge-red" style="font-size:10px">Überfällig</span><span>Nebyat B.</span></div>
+            </div>
+          </div>
+          <div class="task-item">
+            <div class="task-check"></div>
+            <div class="task-content">
+              <div class="task-title">Neue Mitarbeiterin einweisen (Checkliste)</div>
+              <div class="task-meta"><span>Fällig: 10.02.</span><span>Dr. Müller</span></div>
+            </div>
+          </div>
+          <div class="task-item">
+            <div class="task-check"></div>
+            <div class="task-content">
+              <div class="task-title">Notfallkoffer-Überprüfung dokumentieren</div>
+              <div class="task-meta"><span>Fällig: 12.02.</span><span>Fr. Weber</span></div>
+            </div>
+          </div>
+          <div class="task-item">
+            <div class="task-check done"></div>
+            <div class="task-content">
+              <div class="task-title">Hygieneschulung Q1 terminieren</div>
+              <div class="task-meta"><span>Erledigt</span><span>Nebyat B.</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid grid-2">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Letzte Nachrichten</span>
+          </div>
+          <div class="msg">
+            <div class="avatar" style="background:var(--primary)">EB</div>
+            <div class="msg-body">
+              <div class="msg-header">
+                <span class="msg-name">Externe Beraterin</span>
+                <span class="msg-time">Heute, 09:14</span>
+              </div>
+              <div class="msg-text">Die neuen Arbeitsanweisungen für den Bereich Prophylaxe habe ich angepasst. Bitte prüfen und freigeben.</div>
+            </div>
+          </div>
+          <div class="msg">
+            <div class="avatar" style="background:var(--accent)">NB</div>
+            <div class="msg-body">
+              <div class="msg-header">
+                <span class="msg-name">Nebyat B.</span>
+                <span class="msg-time">Gestern, 16:30</span>
+              </div>
+              <div class="msg-text">Begehungstermin steht: 15.04. — bitte alle Unterlagen bis Ende März fertig haben.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Aufgabenverteilung Team</span>
+          </div>
+          <div class="chart-bar">
+            <div class="chart-col"><div class="val">5</div><div class="bar" style="height:100%;background:var(--primary)"></div><div class="label">Nebyat</div></div>
+            <div class="chart-col"><div class="val">3</div><div class="bar" style="height:60%;background:var(--accent)"></div><div class="label">Dr. M.</div></div>
+            <div class="chart-col"><div class="val">2</div><div class="bar" style="height:40%;background:#81C784"></div><div class="label">Schneider</div></div>
+            <div class="chart-col"><div class="val">1</div><div class="bar" style="height:20%;background:var(--warning)"></div><div class="label">Weber</div></div>
+            <div class="chart-col"><div class="val">1</div><div class="bar" style="height:20%;background:#CE93D8"></div><div class="label">Klein</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== AUFGABEN ===== -->
+    <div class="page" id="page-tasks">
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Alle Aufgaben</span>
+          <button style="padding:8px 16px;background:var(--primary);color:var(--white);border:none;border-radius:var(--radius-sm);font-size:13px;cursor:pointer;font-family:inherit;font-weight:500">+ Neue Aufgabe</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Priorität</th><th>Aufgabe</th><th>Zuständig</th><th>Fällig</th><th>Status</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><span class="priority-dot" style="background:var(--danger)"></span>Hoch</td><td>Arbeitsanweisung Prophylaxe überarbeiten</td><td>Nebyat B.</td><td>05.02.2026</td><td><span class="badge badge-red">Überfällig</span></td></tr>
+              <tr><td><span class="priority-dot" style="background:var(--danger)"></span>Hoch</td><td>MPG-Dokumentation prüfen & aktualisieren</td><td>Fr. Schneider</td><td>09.02.2026</td><td><span class="badge badge-yellow">In Arbeit</span></td></tr>
+              <tr><td><span class="priority-dot" style="background:var(--warning)"></span>Mittel</td><td>Neue Mitarbeiterin einweisen (Checkliste)</td><td>Dr. Müller</td><td>10.02.2026</td><td><span class="badge badge-yellow">In Arbeit</span></td></tr>
+              <tr><td><span class="priority-dot" style="background:var(--warning)"></span>Mittel</td><td>Notfallkoffer-Überprüfung dokumentieren</td><td>Fr. Weber</td><td>12.02.2026</td><td><span class="badge badge-blue">Geplant</span></td></tr>
+              <tr><td><span class="priority-dot" style="background:var(--warning)"></span>Mittel</td><td>Fortbildungsplan Q2 erstellen</td><td>Nebyat B.</td><td>28.02.2026</td><td><span class="badge badge-blue">Geplant</span></td></tr>
+              <tr><td><span class="priority-dot" style="background:var(--success)"></span>Normal</td><td>Wartungsvertrag Autoklav verlängern</td><td>Nebyat B.</td><td>15.03.2026</td><td><span class="badge badge-blue">Geplant</span></td></tr>
+              <tr><td><span class="priority-dot" style="background:var(--success)"></span>Normal</td><td>Teambesprechung März planen</td><td>Dr. Müller</td><td>20.02.2026</td><td><span class="badge badge-gray">Offen</span></td></tr>
+              <tr><td><span class="priority-dot" style="background:var(--success)"></span>Normal</td><td>Sterilisator-Wartungsprotokoll aktualisieren</td><td>Fr. Schneider</td><td>07.02.2026</td><td><span class="badge badge-green">Erledigt</span></td></tr>
+              <tr><td><span class="priority-dot" style="background:var(--success)"></span>Normal</td><td>Hygieneschulung Q1 terminieren</td><td>Nebyat B.</td><td>06.02.2026</td><td><span class="badge badge-green">Erledigt</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== DOKUMENTE ===== -->
+    <div class="page" id="page-documents">
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Dokumentenstruktur</span>
+          <span class="badge badge-blue">34 Dokumente</span>
+        </div>
+        <div class="doc-folder">
+          <div class="doc-folder-header" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">
+            <span class="material-icons-round">folder</span>QM-Handbuch
+            <span class="badge badge-green" style="margin-left:auto">Aktuell</span>
+          </div>
+          <div class="doc-children">
+            <div class="doc-file"><span class="material-icons-round">description</span>QM-Handbuch v3.2.pdf<span class="badge badge-green">Freigegeben</span></div>
+            <div class="doc-file"><span class="material-icons-round">description</span>Qualitätspolitik.pdf</div>
+            <div class="doc-file"><span class="material-icons-round">description</span>Organigramm.pdf</div>
+            <div class="doc-file"><span class="material-icons-round">description</span>Verantwortlichkeiten-Matrix.xlsx</div>
+          </div>
+        </div>
+        <div class="doc-folder">
+          <div class="doc-folder-header" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">
+            <span class="material-icons-round">folder</span>Hygienemanagement
+            <span class="badge badge-green" style="margin-left:auto">Aktuell</span>
+          </div>
+          <div class="doc-children">
+            <div class="doc-file"><span class="material-icons-round">description</span>Hygieneplan 2026.pdf</div>
+            <div class="doc-file"><span class="material-icons-round">description</span>Reinigungs- und Desinfektionsplan.pdf</div>
+            <div class="doc-file"><span class="material-icons-round">description</span>Sterilisationsprotokoll-Vorlage.xlsx</div>
+            <div class="doc-file"><span class="material-icons-round">description</span>Händehygiene-Anweisung.pdf</div>
+          </div>
+        </div>
+        <div class="doc-folder">
+          <div class="doc-folder-header" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">
+            <span class="material-icons-round">folder</span>Arbeitsanweisungen
+            <span class="badge badge-yellow" style="margin-left:auto">2 überfällig</span>
+          </div>
+          <div class="doc-children">
+            <div class="doc-file"><span class="material-icons-round">description</span>AA Prophylaxe.pdf<span class="badge badge-red">Überarbeitung nötig</span></div>
+            <div class="doc-file"><span class="material-icons-round">description</span>AA Röntgen.pdf<span class="badge badge-green">Aktuell</span></div>
+            <div class="doc-file"><span class="material-icons-round">description</span>AA Notfallmanagement.pdf<span class="badge badge-green">Aktuell</span></div>
+            <div class="doc-file"><span class="material-icons-round">description</span>AA Abdrucknahme.pdf<span class="badge badge-red">Überarbeitung nötig</span></div>
+            <div class="doc-file"><span class="material-icons-round">description</span>AA Patientenaufnahme.pdf<span class="badge badge-green">Aktuell</span></div>
+          </div>
+        </div>
+        <div class="doc-folder">
+          <div class="doc-folder-header" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">
+            <span class="material-icons-round">folder</span>Fortbildungen & Schulungen
+          </div>
+          <div class="doc-children">
+            <div class="doc-file"><span class="material-icons-round">description</span>Fortbildungsplan 2026.xlsx</div>
+            <div class="doc-file"><span class="material-icons-round">description</span>Teilnahmebescheinigungen (Sammlung)</div>
+            <div class="doc-file"><span class="material-icons-round">description</span>Schulungsnachweis Hygiene Q4-2025.pdf</div>
+          </div>
+        </div>
+        <div class="doc-folder">
+          <div class="doc-folder-header" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">
+            <span class="material-icons-round">folder</span>MPG / Medizinprodukte
+          </div>
+          <div class="doc-children">
+            <div class="doc-file"><span class="material-icons-round">description</span>Medizinprodukte-Bestandsliste.xlsx</div>
+            <div class="doc-file"><span class="material-icons-round">description</span>Wartungsprotokolle 2025.pdf</div>
+            <div class="doc-file"><span class="material-icons-round">description</span>STK-Nachweise.pdf</div>
+          </div>
+        </div>
+        <div class="doc-folder">
+          <div class="doc-folder-header" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">
+            <span class="material-icons-round">folder</span>Vorlagen & Checklisten
+          </div>
+          <div class="doc-children">
+            <div class="doc-file"><span class="material-icons-round">description</span>Einarbeitungs-Checkliste.pdf</div>
+            <div class="doc-file"><span class="material-icons-round">description</span>Begehungs-Checkliste.pdf</div>
+            <div class="doc-file"><span class="material-icons-round">description</span>Protokoll-Vorlage Teambesprechung.docx</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== QM ===== -->
+    <div class="page" id="page-qm">
+      <div class="grid grid-2" style="margin-bottom:20px">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">QM-Status Gesamt</span>
+            <span class="badge badge-green">87%</span>
+          </div>
+          <div style="margin-bottom:16px">
+            <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--gray-500);margin-bottom:4px"><span>Erfüllungsgrad</span><span>87 / 100</span></div>
+            <div class="progress-bar"><div class="progress-fill" style="width:87%;background:var(--success)"></div></div>
+          </div>
+          <div style="margin-bottom:12px">
+            <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--gray-500);margin-bottom:4px"><span>Dokumentation</span><span>92%</span></div>
+            <div class="progress-bar"><div class="progress-fill" style="width:92%;background:var(--primary)"></div></div>
+          </div>
+          <div style="margin-bottom:12px">
+            <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--gray-500);margin-bottom:4px"><span>Schulungen</span><span>75%</span></div>
+            <div class="progress-bar"><div class="progress-fill" style="width:75%;background:var(--warning)"></div></div>
+          </div>
+          <div>
+            <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--gray-500);margin-bottom:4px"><span>Prozesse</span><span>88%</span></div>
+            <div class="progress-bar"><div class="progress-fill" style="width:88%;background:var(--success)"></div></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Nächste Prüftermine</span>
+          </div>
+          <div class="status-row"><span class="status-label"><span class="material-icons-round">event</span>Begehung Gesundheitsamt</span><span class="badge badge-blue">15.04.2026</span></div>
+          <div class="status-row"><span class="status-label"><span class="material-icons-round">event</span>Internes Audit</span><span class="badge badge-blue">01.06.2026</span></div>
+          <div class="status-row"><span class="status-label"><span class="material-icons-round">event</span>Röntgen-Sachverständigenprüfung</span><span class="badge badge-blue">15.09.2026</span></div>
+          <div class="status-row"><span class="status-label"><span class="material-icons-round">event</span>QM-Review (jährlich)</span><span class="badge badge-blue">01.12.2026</span></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Workflow: Arbeitsanweisung aktualisieren</span>
+        </div>
+        <div style="display:flex;gap:4px;align-items:center;padding:12px 0;flex-wrap:wrap">
+          <div style="padding:8px 16px;background:var(--success);color:var(--white);border-radius:20px;font-size:12px;font-weight:600">1. Entwurf erstellen</div>
+          <span class="material-icons-round" style="color:var(--gray-300);font-size:20px">arrow_forward</span>
+          <div style="padding:8px 16px;background:var(--success);color:var(--white);border-radius:20px;font-size:12px;font-weight:600">2. Beraterin prüft</div>
+          <span class="material-icons-round" style="color:var(--gray-300);font-size:20px">arrow_forward</span>
+          <div style="padding:8px 16px;background:var(--warning);color:var(--white);border-radius:20px;font-size:12px;font-weight:600">3. Freigabe durch Praxis ←</div>
+          <span class="material-icons-round" style="color:var(--gray-300);font-size:20px">arrow_forward</span>
+          <div style="padding:8px 16px;background:var(--gray-200);color:var(--gray-500);border-radius:20px;font-size:12px;font-weight:600">4. Veröffentlichung</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== KPI ===== -->
+    <div class="page" id="page-kpi">
+      <div class="grid grid-3" style="margin-bottom:20px">
+        <div class="card kpi">
+          <div class="kpi-icon" style="background:#E8F5E9"><span class="material-icons-round" style="color:var(--success)">trending_up</span></div>
+          <div class="kpi-value">94%</div>
+          <div class="kpi-label">Terminauslastung</div>
+          <div class="kpi-change up">▲ 2% zum Vormonat</div>
+        </div>
+        <div class="card kpi">
+          <div class="kpi-icon" style="background:#FFF8E1"><span class="material-icons-round" style="color:var(--warning)">event_busy</span></div>
+          <div class="kpi-value">4,2%</div>
+          <div class="kpi-label">No-Show-Rate</div>
+          <div class="kpi-change up">▼ 1,1% zum Vormonat</div>
+        </div>
+        <div class="card kpi">
+          <div class="kpi-icon" style="background:var(--primary-light)"><span class="material-icons-round" style="color:var(--primary)">schedule</span></div>
+          <div class="kpi-value">18 Min</div>
+          <div class="kpi-label">Ø Wartezeit</div>
+          <div class="kpi-change up">▼ 3 Min zum Vormonat</div>
+        </div>
+      </div>
+
+      <div class="grid grid-2" style="margin-bottom:20px">
+        <div class="card">
+          <div class="card-header"><span class="card-title">Patienten pro Monat (2025/26)</span></div>
+          <div class="chart-bar">
+            <div class="chart-col"><div class="val">312</div><div class="bar" style="height:78%"></div><div class="label">Sep</div></div>
+            <div class="chart-col"><div class="val">345</div><div class="bar" style="height:86%"></div><div class="label">Okt</div></div>
+            <div class="chart-col"><div class="val">298</div><div class="bar" style="height:74%"></div><div class="label">Nov</div></div>
+            <div class="chart-col"><div class="val">276</div><div class="bar" style="height:69%"></div><div class="label">Dez</div></div>
+            <div class="chart-col"><div class="val">358</div><div class="bar" style="height:90%"></div><div class="label">Jan</div></div>
+            <div class="chart-col"><div class="val">401</div><div class="bar" style="height:100%;background:var(--primary)"></div><div class="label">Feb*</div></div>
+          </div>
+          <div style="font-size:11px;color:var(--gray-400);margin-top:12px">* Februar: Hochrechnung basierend auf aktuellem Stand</div>
+        </div>
+
+        <div class="card">
+          <div class="card-header"><span class="card-title">Behandlungsverteilung</span></div>
+          <div style="padding:8px 0">
+            <div style="margin-bottom:12px">
+              <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px"><span style="color:var(--gray-700);font-weight:500">Prophylaxe / PZR</span><span style="color:var(--gray-500)">35%</span></div>
+              <div class="progress-bar"><div class="progress-fill" style="width:35%;background:var(--primary)"></div></div>
+            </div>
+            <div style="margin-bottom:12px">
+              <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px"><span style="color:var(--gray-700);font-weight:500">Konservierende Behandlung</span><span style="color:var(--gray-500)">28%</span></div>
+              <div class="progress-bar"><div class="progress-fill" style="width:28%;background:var(--accent)"></div></div>
+            </div>
+            <div style="margin-bottom:12px">
+              <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px"><span style="color:var(--gray-700);font-weight:500">Zahnersatz</span><span style="color:var(--gray-500)">18%</span></div>
+              <div class="progress-bar"><div class="progress-fill" style="width:18%;background:var(--warning)"></div></div>
+            </div>
+            <div style="margin-bottom:12px">
+              <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px"><span style="color:var(--gray-700);font-weight:500">Chirurgie</span><span style="color:var(--gray-500)">12%</span></div>
+              <div class="progress-bar"><div class="progress-fill" style="width:12%;background:#CE93D8"></div></div>
+            </div>
+            <div>
+              <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px"><span style="color:var(--gray-700);font-weight:500">Sonstiges</span><span style="color:var(--gray-500)">7%</span></div>
+              <div class="progress-bar"><div class="progress-fill" style="width:7%;background:var(--gray-300)"></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><span class="card-title">Recall-Übersicht</span></div>
+        <div class="grid grid-3" style="gap:12px">
+          <div style="text-align:center;padding:16px;background:var(--gray-50);border-radius:var(--radius-sm)">
+            <div style="font-size:24px;font-weight:700;color:var(--success)">78%</div>
+            <div style="font-size:12px;color:var(--gray-500)">Recall-Quote</div>
+          </div>
+          <div style="text-align:center;padding:16px;background:var(--gray-50);border-radius:var(--radius-sm)">
+            <div style="font-size:24px;font-weight:700;color:var(--primary)">142</div>
+            <div style="font-size:12px;color:var(--gray-500)">Anstehende Recalls</div>
+          </div>
+          <div style="text-align:center;padding:16px;background:var(--gray-50);border-radius:var(--radius-sm)">
+            <div style="font-size:24px;font-weight:700;color:var(--warning)">23</div>
+            <div style="font-size:12px;color:var(--gray-500)">Überfällig (&gt;6 Monate)</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== NACHRICHTEN ===== -->
+    <div class="page" id="page-messages">
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Kommunikation — Praxis ↔ Externe Beraterin</span>
+        </div>
+        <div class="msg">
+          <div class="avatar" style="background:var(--primary)">EB</div>
+          <div class="msg-body">
+            <div class="msg-header"><span class="msg-name">Externe Beraterin</span><span class="msg-time">08.02.2026, 09:14</span></div>
+            <div class="msg-text">Guten Morgen! Die neuen Arbeitsanweisungen für den Bereich Prophylaxe habe ich angepasst und als Entwurf hochgeladen. Bitte prüfen Sie die Änderungen und geben Sie mir Rückmeldung, ob wir so freigeben können.</div>
+          </div>
+        </div>
+        <div class="msg">
+          <div class="avatar" style="background:var(--accent)">NB</div>
+          <div class="msg-body">
+            <div class="msg-header"><span class="msg-name">Nebyat B.</span><span class="msg-time">07.02.2026, 16:30</span></div>
+            <div class="msg-text">Begehungstermin steht fest: 15. April 2026. Bitte alle relevanten Unterlagen bis Ende März aktualisieren und bereitstellen. Ich erstelle eine Checkliste.</div>
+          </div>
+        </div>
+        <div class="msg">
+          <div class="avatar" style="background:var(--primary)">EB</div>
+          <div class="msg-body">
+            <div class="msg-header"><span class="msg-name">Externe Beraterin</span><span class="msg-time">06.02.2026, 11:00</span></div>
+            <div class="msg-text">Sehr gut. Ich habe mir die MPG-Dokumentation angesehen — die Wartungsprotokolle für zwei Geräte fehlen noch. Können Sie das bei Fr. Schneider nachfragen?</div>
+          </div>
+        </div>
+        <div class="msg">
+          <div class="avatar" style="background:var(--accent)">NB</div>
+          <div class="msg-body">
+            <div class="msg-header"><span class="msg-name">Nebyat B.</span><span class="msg-time">05.02.2026, 14:15</span></div>
+            <div class="msg-text">Danke für die Rückmeldung zum QM-Handbuch. Die Korrekturen sind eingearbeitet. Neue Version ist hochgeladen (v3.2).</div>
+          </div>
+        </div>
+        <div class="msg">
+          <div class="avatar" style="background:var(--primary)">EB</div>
+          <div class="msg-body">
+            <div class="msg-header"><span class="msg-name">Externe Beraterin</span><span class="msg-time">04.02.2026, 09:45</span></div>
+            <div class="msg-text">Im QM-Handbuch Kapitel 4.3 (Hygieneverantwortliche) ist noch der alte Name drin. Bitte anpassen. Ansonsten sieht alles gut aus — großes Lob an das Team!</div>
+          </div>
+        </div>
+        <div class="msg-input">
+          <input type="text" placeholder="Nachricht schreiben...">
+          <button>Senden</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<script>
+// Navigation
+document.querySelectorAll('.nav-item').forEach(item=>{
+  item.addEventListener('click',()=>{
+    document.querySelectorAll('.nav-item').forEach(i=>i.classList.remove('active'));
+    document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+    item.classList.add('active');
+    const page=item.dataset.page;
+    document.getElementById('page-'+page).classList.add('active');
+    document.getElementById('pageTitle').textContent=item.textContent.trim();
+    if(window.innerWidth<768)toggleSidebar();
+  });
+});
+
+// Sidebar toggle (mobile)
+function toggleSidebar(){
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('overlay').classList.toggle('open');
+}
+
+// Date
+const d=new Date();
+const opts={weekday:'long',day:'numeric',month:'long',year:'numeric'};
+document.getElementById('todayDate').textContent=d.toLocaleDateString('de-DE',opts);
+
+// Task check toggle
+document.querySelectorAll('.task-check').forEach(c=>{
+  c.addEventListener('click',()=>c.classList.toggle('done'));
+});
+</script>
+</body>
+</html>
