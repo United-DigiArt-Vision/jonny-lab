@@ -312,6 +312,65 @@ def weekly_report():
     routing_suggestions(entries=this_week)
 
 
+def report_json(entries):
+    """Output report as JSON."""
+    if not entries:
+        print(json.dumps({"total_calls": 0, "total_tokens": 0, "total_cost": 0}))
+        return
+    by_model, by_task, by_day, total_cost = _build_aggregates(entries)
+    data = {
+        "total_calls": len(entries),
+        "total_tokens": sum(e["tokens"]["total"] for e in entries),
+        "total_cost": round(total_cost, 4),
+        "by_model": {k: {"calls": v["calls"], "tokens": v["tokens"], "cost": round(v["cost"], 4)} for k, v in by_model.items()},
+        "by_task": {k: {"calls": v["calls"], "tokens": v["tokens"], "cost": round(v["cost"], 4)} for k, v in by_task.items()},
+        "by_day": {k: {"calls": v["calls"], "tokens": v["tokens"], "cost": round(v["cost"], 4)} for k, v in by_day.items()},
+        "warnings": _spend_warnings(by_model, by_task, total_cost),
+    }
+    print(json.dumps(data, indent=2))
+
+
+def weekly_report_json():
+    """Output weekly report as JSON."""
+    now = datetime.now(timezone.utc)
+    this_week = load_entries(days=7)
+    all_14 = load_entries(days=14)
+    cutoff_this = now - timedelta(days=7)
+    prev_week = [e for e in all_14 if datetime.fromisoformat(e["timestamp"]) < cutoff_this]
+
+    if not this_week:
+        print(json.dumps({"total_cost": 0, "total_calls": 0, "trend": "no_data"}))
+        return
+
+    by_model, by_task, by_day, total_cost = _build_aggregates(this_week)
+    prev_cost = sum(e["costEstimate"] for e in prev_week)
+
+    if prev_cost > 0:
+        change = (total_cost - prev_cost) / prev_cost * 100
+        if change > 10:
+            trend = "rising"
+        elif change < -10:
+            trend = "falling"
+        else:
+            trend = "stable"
+    else:
+        trend = "no_previous_data"
+
+    data = {
+        "period_start": (now - timedelta(days=7)).strftime('%Y-%m-%d'),
+        "period_end": now.strftime('%Y-%m-%d'),
+        "total_cost": round(total_cost, 4),
+        "total_calls": len(this_week),
+        "total_tokens": sum(e["tokens"]["total"] for e in this_week),
+        "prev_week_cost": round(prev_cost, 4),
+        "trend": trend,
+        "by_model": {k: {"calls": v["calls"], "tokens": v["tokens"], "cost": round(v["cost"], 4)} for k, v in by_model.items()},
+        "by_task": {k: {"calls": v["calls"], "tokens": v["tokens"], "cost": round(v["cost"], 4)} for k, v in by_task.items()},
+        "warnings": _spend_warnings(by_model, by_task, total_cost),
+    }
+    print(json.dumps(data, indent=2))
+
+
 if __name__ == "__main__":
     p = argparse.ArgumentParser(description="AI Cost Tracking Report")
     p.add_argument("--days", type=int, help="Filter last N days")
@@ -319,12 +378,19 @@ if __name__ == "__main__":
     p.add_argument("--task-type", help="Filter by task type")
     p.add_argument("--weekly", action="store_true", help="Show weekly summary with trend analysis")
     p.add_argument("--routing", action="store_true", help="Show model routing suggestions to reduce costs")
+    p.add_argument("--json", action="store_true", dest="json_output", help="Output as JSON (machine-readable)")
     args = p.parse_args()
 
     if args.routing:
         routing_suggestions(days=args.days)
     elif args.weekly:
-        weekly_report()
+        if args.json_output:
+            weekly_report_json()
+        else:
+            weekly_report()
     else:
         entries = load_entries(days=args.days, model=args.model, task_type=args.task_type)
-        report(entries)
+        if args.json_output:
+            report_json(entries)
+        else:
+            report(entries)

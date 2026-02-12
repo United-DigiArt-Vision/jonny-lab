@@ -115,6 +115,10 @@ def update_lead(args):
                (args.id, old, args.status, getattr(args, 'notes', None)))
     db.commit()
     print(f"✅ Lead #{args.id}: {old} → {args.status}")
+    # Emit CHAIN_EVENT for feedback loop
+    if args.status in ("won", "lost"):
+        event = {"event": args.status, "lead_id": args.id, "title": row["title"], "url": row["url"]}
+        print(f"CHAIN_EVENT:{json.dumps(event)}")
     db.close()
 
 def list_leads(args):
@@ -264,9 +268,21 @@ def timeline(args):
         print(f"   {ts} {icon} [{etype}] {desc}")
     db.close()
 
+def get_lead_source(args):
+    """Lookup lead by ID for feedback chain."""
+    db = get_db()
+    row = db.execute("SELECT id, title, url, source, status FROM leads WHERE id=?", (args.id,)).fetchone()
+    if not row:
+        print(f"ERROR: Lead #{args.id} not found", file=sys.stderr)
+        db.close(); return
+    result = {"id": row["id"], "title": row["title"], "url": row["url"], "source": row["source"], "status": row["status"]}
+    print(json.dumps(result, indent=2))
+    db.close()
+
+
 def main():
     p = argparse.ArgumentParser(description='Lead Tracker')
-    p.add_argument('--action', required=True, choices=['add','update','list','stats','search','migrate','contact','timeline'])
+    p.add_argument('--action', required=True, choices=['add','update','list','stats','search','migrate','contact','timeline','get-source'])
     p.add_argument('--source', choices=['upwork','reddit','email','other'])
     p.add_argument('--title')
     p.add_argument('--company')
@@ -307,6 +323,10 @@ def main():
         if not args.id:
             print("❌ --id required"); sys.exit(1)
         timeline(args)
+    elif args.action == 'get-source':
+        if not args.id:
+            print("❌ --id required"); sys.exit(1)
+        get_lead_source(args)
     elif args.action == 'migrate':
         db = get_db()
         migrate_seed(db)

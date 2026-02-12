@@ -159,8 +159,49 @@ def action_update(args, conn):
     conn.commit()
     if cur.rowcount:
         print(f"✅ Updated thread #{args.id}")
+        # Emit CHAIN_EVENT for feedback loop
+        if args.status in ("posted", "rejected"):
+            row = conn.execute("SELECT title FROM threads WHERE id=?", (args.id,)).fetchone()
+            title = row["title"] if row else ""
+            event = {"event": args.status, "thread_id": args.id, "title": title}
+            print(f"CHAIN_EVENT:{json.dumps(event)}")
     else:
         print(f"ERROR: Thread #{args.id} not found", file=sys.stderr); return 1
+    return 0
+
+
+def action_get_source(args, conn):
+    """Lookup thread by ID, return source info for feedback chain."""
+    if not args.id:
+        print("ERROR: --id required", file=sys.stderr); return 1
+    row = conn.execute("SELECT id, title, file_path, status, notes FROM threads WHERE id=?", (args.id,)).fetchone()
+    if not row:
+        print(f"ERROR: Thread #{args.id} not found", file=sys.stderr); return 1
+    source_url = None
+    # Try to extract URL from notes
+    if row["notes"]:
+        m = re.search(r'https?://\S+', row["notes"])
+        if m:
+            source_url = m.group(0)
+    # Try to extract URL from thread file
+    if not source_url and row["file_path"]:
+        try:
+            fp = WORKSPACE / row["file_path"]
+            if fp.exists():
+                content = fp.read_text(errors="replace")
+                m = re.search(r'https?://\S+', content)
+                if m:
+                    source_url = m.group(0)
+        except Exception:
+            pass
+    result = {
+        "id": row["id"],
+        "title": row["title"],
+        "file_path": row["file_path"],
+        "status": row["status"],
+        "source_url": source_url,
+    }
+    print(json.dumps(result, indent=2))
     return 0
 
 def action_stats(args, conn):
@@ -206,7 +247,7 @@ def action_scan(args, conn):
 
 def main():
     p = argparse.ArgumentParser(description="Thread Pipeline")
-    p.add_argument("--action", required=True, choices=["register","check","list","update","stats","scan"])
+    p.add_argument("--action", required=True, choices=["register","check","list","update","stats","scan","get-source"])
     p.add_argument("--file", help="Thread file path")
     p.add_argument("--title", help="Thread title")
     p.add_argument("--tags", help="Comma-separated tags")
@@ -217,7 +258,8 @@ def main():
     args = p.parse_args()
     conn = get_db()
     actions = {"register": action_register, "check": action_check, "list": action_list,
-               "update": action_update, "stats": action_stats, "scan": action_scan}
+               "update": action_update, "stats": action_stats, "scan": action_scan,
+               "get-source": action_get_source}
     sys.exit(actions[args.action](args, conn))
 
 if __name__ == "__main__":

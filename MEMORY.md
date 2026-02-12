@@ -105,10 +105,18 @@ Alles was ich tue, muss diesem Ziel dienen. Jede Entscheidung, jedes Projekt, je
 
 **Sub-Agents (Max Plan — ALLE auf Opus 4.6):**
 - 🔴 **Caraxes** — Der Blutdrache — Lead Software Engineer — **Opus 4.6**
+- 🩵 **Syrax** — Die Architektin — Design & Architecture Lead — **Opus 4.6** (NEU 2026-02-12)
 - 🛡️ **Vermithrax** — Der Prüfer — QA & Test Engineer — **Opus 4.6**
 - ❤️ **Meleys** — Die Rote Königin — Senior Research Analyst — **Opus 4.6**
 - ✨ **Sunfyre** — Der Goldene — Content Creator — **Opus 4.6**
 - 💰 **Vhagar** — Der Revenue Guardian — Revenue & Finance Analyst — **Opus 4.6** (NEU 2026-02-12)
+
+**Hierarchie:** Dino 👑 → Balerion 🖤 → Vhagar 💰 → Syrax/Caraxes/Meleys/Vermithrax/Sunfyre
+
+**Rollenverteilung Design vs. QA (2026-02-12 — Dino's Regel):**
+- Syrax schreibt: PRDs, Design-Specs, Workflow-Specs, Datenmodelle, Architektur UND Test-Specs
+- Vermithrax: führt Syrax' Tests NUR AUS, schreibt KEINE eigenen Tests (kann sich sonst selbst bescheißen)
+- Der Dev Loop: Syrax (Design + Test-Design) → Caraxes (Code) → Vermithrax (Test-Ausführung) → Loop bis PASS
 
 **Nightly Dragon Council (täglich 02:00):**
 - 🔬 Meleys = Growth Strategist (Wo wachsen?)
@@ -116,11 +124,10 @@ Alles was ich tue, muss diesem Ziel dienen. Jede Entscheidung, jedes Projekt, je
 - 🛡️ Vermithrax = Skeptical Operator (Was kann schiefgehen?)
 - 🖤 Balerion = Operations (Läuft alles?)
 
-**Vermithrax-Workflow (inspiriert von Carlinis "Agent Teams" Artikel):**
-- Schreibt Tests BEVOR Code existiert (TDD)
-- Validiert Caraxes' Implementierungen
-- Regressions-Checks, Code Review, Quality Gate
-- Kein Code geht an Balerion ohne Vermithrax' Freigabe
+**Vermithrax-Workflow — NUR TEST-AUSFÜHRUNG:**
+- Führt Syrax' Test-Specs aus (schreibt KEINE eigenen Tests)
+- Meldet PASS/FAIL ehrlich
+- Kein Code geht an Balerion ohne Vermithrax' PASS
 
 **Regeln:** Dragon Protocol (`dragon-protocol.md`) wird jedem mitgegeben.
 Alle halten sich an gleiche Qualitäts- und Dokumentationsstandards.

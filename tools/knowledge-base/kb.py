@@ -212,6 +212,8 @@ def action_ingest(args):
         db.commit()
         db.close()
         print(f"✅ Ingested: \"{title}\" ({stype}) — {len(chunks)} chunks")
+        result = {"status": "ingested", "source_id": src_id, "title": title, "chunks": len(chunks)}
+        print(f"CHAIN_RESULT:{json.dumps(result)}")
     finally:
         _unlock(lf)
 

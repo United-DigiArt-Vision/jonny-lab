@@ -39,3 +39,8 @@
 **Trigger:** Mehrere Aufgaben umzusetzen
 **Fehler:** Dino Zwischenstatus geschickt und nach TwitterAPI.io gefragt statt selbst zu registrieren
 **Regel:** Einfach ALLES umsetzen. Nur melden wenn ich wirklich nicht weiterkomme (z.B. Bezahlung nötig). Zwischenstatus sind Zeitverschwendung.
+
+## CP-009: Bei Audit-Findings fragen statt fixen (2026-02-12)
+**Trigger:** Vermithrax findet Probleme im Audit
+**Fehler:** Dino gefragt ob Syrax die Verkettung designen soll
+**Regel:** Audit findet Problem → sofort Dev Loop starten (Syrax Design → Vermithrax Tests → Caraxes Code → Vermithrax QA). Nie fragen. Der Loop ist der Standard-Prozess für ALLES.

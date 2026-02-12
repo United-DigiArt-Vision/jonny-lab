@@ -3,3 +3,5 @@
 {"action": "feedback", "url": "https://junk-news.com/article2", "relevant": false, "domain": "junk-news.com", "reason": "", "timestamp": "2026-02-12T09:51:12Z"}
 {"action": "feedback", "url": "https://junk-news.com/article3", "relevant": false, "domain": "junk-news.com", "reason": "", "timestamp": "2026-02-12T09:51:12Z"}
 {"action": "auto_learn", "type": "skip_domain", "value": "junk-news.com", "reason": "3 irrelevant results", "timestamp": "2026-02-12T09:51:12Z"}
+{"action": "feedback", "url": "", "relevant": true, "domain": null, "reason": "", "timestamp": "2026-02-12T16:44:23Z"}
+{"action": "feedback", "url": "", "relevant": false, "domain": null, "reason": "", "timestamp": "2026-02-12T16:44:24Z"}
