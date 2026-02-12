@@ -1,0 +1,27 @@
+{
+  "description": "Preflight-Log: Beweis dass das Operations Manual gelesen wurde BEVOR gehandelt wird. Ohne Eintrag hier → NICHT starten!",
+  "entries": [
+    {
+      "date": "2026-02-09T06:47:00+01:00",
+      "dragon": "Meleys",
+      "manual": "weekly-ai-review.md",
+      "action": "Erstes wöchentliches AI News Review — Matt Wolfe KW 06/2026",
+      "confirmed": true
+    },
+    {
+      "date": "2026-02-09T22:10:00+01:00",
+      "dragon": "Balerion",
+      "manual": "x-threads.md",
+      "action": "Thread posten: Anthropic 10 GW Datacenter Empire",
+      "confirmed": true
+    },
+    {
+      "date": "2026-02-10T09:20:00+01:00",
+      "dragon": "Balerion",
+      "manual": "x-threads.md",
+      "action": "Thread posten: OpenAI New Chat Model This Week + ChatGPT Growth Surge",
+      "confirmed": true
+    }
+  ]
+}
+{"date":"2026-02-10T13:46:30+01:00","manual":"x-threads.md","action":"Thread posten: OpenClaw China/Korea Ban","dragon":"meleys","confirmed":true}

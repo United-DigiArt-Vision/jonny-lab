@@ -1,0 +1,50 @@
+{
+  "skip_domains": [
+    "example.com",
+    "spam-site.net",
+    "mailchimp.com",
+    "constantcontact.com",
+    "sendgrid.net",
+    "click.redditmail.com",
+    "email.mg.substack.com",
+    "spam-watches.com",
+    "junk-news.com"
+  ],
+  "skip_keywords": [
+    "sponsored",
+    "advertisement",
+    "press release",
+    "unsubscribe",
+    "buy now",
+    "limited offer",
+    "act now",
+    "click here"
+  ],
+  "prefer_keywords": [
+    "AI",
+    "automation",
+    "agent",
+    "OpenClaw",
+    "startup",
+    "funding",
+    "revenue",
+    "freelance",
+    "upwork",
+    "LLM",
+    "GPT",
+    "Claude",
+    "SaaS"
+  ],
+  "prefer_domains": [
+    "openai.com",
+    "anthropic.com",
+    "techcrunch.com",
+    "theverge.com",
+    "arstechnica.com",
+    "ycombinator.com",
+    "producthunt.com",
+    "github.com"
+  ],
+  "min_quality_score": 40,
+  "updated_at": "2026-02-12T09:51:12Z"
+}

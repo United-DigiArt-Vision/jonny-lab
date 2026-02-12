@@ -1,0 +1,27 @@
+{
+  "lastChecks": {
+    "email": 1770616800,
+    "reddit_inbox": 1770388200,
+    "reddit_chat": 1770388200,
+    "github_pr": 1770321600,
+    "ai_news": 1770616800
+  },
+  "lastHeartbeat": "2026-02-09T07:00:00+01:00",
+  "pendingApplications": {
+    "west_set_8210": {
+      "platform": "reddit",
+      "sent": "2026-02-06T15:15:00+01:00",
+      "status": "awaiting_reply"
+    },
+    "kim_garcia08": {
+      "platform": "reddit",
+      "sent": "2026-02-06T14:04:00+01:00",
+      "status": "awaiting_reply"
+    },
+    "victory_talent": {
+      "platform": "reddit",
+      "status": "rate_limited_pending",
+      "retry_at": "2026-02-06T20:05:00+01:00"
+    }
+  }
+}

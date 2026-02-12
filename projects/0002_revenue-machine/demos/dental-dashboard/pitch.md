@@ -17,7 +17,7 @@ Ich bin Webentwickler mit Schwerpunkt auf **maßgeschneiderten Dashboard- und Ma
 **1. Praxis-Dashboard (Demo)**
 Ich habe mir Ihre Anforderungen angesehen und direkt eine funktionsfähige Demo gebaut — damit Sie sehen können, wie ich arbeite und was möglich ist:
 
-👉 **[Live-Demo ansehen](https://digit500.github.io/jonny-lab/projects/0002_revenue-machine/demos/dental-dashboard/index.html)**
+👉 **[Live-Demo ansehen](https://united-digiart-vision.github.io/jonny-lab/demos/dental-dashboard/)**
 
 Die Demo zeigt:
 - Status-Übersicht (QM, Hygiene, Workflows)

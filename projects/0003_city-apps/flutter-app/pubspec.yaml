@@ -1,0 +1,35 @@
+name: poxdorf_city_app
+description: City App für die Gemeinde Poxdorf - Müllabfuhr, Events, News und mehr
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  
+  # UI & Material Design 3
+  material_symbols_icons: ^4.2785.1
+  
+  # Carousel für Events
+  carousel_slider: ^4.2.1
+  
+  # State Management
+  provider: ^6.1.1
+  
+  # Datum/Zeit
+  intl: ^0.19.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+
+flutter:
+  uses-material-design: true
+  
+  # Assets (Wappen etc. können hier hinzugefügt werden)
+  # assets:
+  #   - assets/images/

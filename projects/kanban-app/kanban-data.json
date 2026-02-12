@@ -1,0 +1,98 @@
+{
+  "projects": [
+    {
+      "id": "0001",
+      "name": "DenkWende",
+      "color": "purple",
+      "status": "paused"
+    },
+    {
+      "id": "0002",
+      "name": "Revenue Machine",
+      "color": "green",
+      "status": "active"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "task-1",
+      "title": "Strato Domain Setup",
+      "project": "0002",
+      "projectName": "Revenue Machine",
+      "priority": "high",
+      "status": "in-progress",
+      "created": "2024-01-15",
+      "notes": "Configure DNS settings and SSL certificate for the domain"
+    },
+    {
+      "id": "task-2",
+      "title": "Landing Page erstellen",
+      "project": "0002",
+      "projectName": "Revenue Machine",
+      "priority": "high",
+      "status": "done",
+      "created": "2024-01-10",
+      "notes": "Modern landing page with hero section, features, and CTA"
+    },
+    {
+      "id": "task-3",
+      "title": "PayPal einrichten",
+      "project": "0002",
+      "projectName": "Revenue Machine",
+      "priority": "medium",
+      "status": "backlog",
+      "created": "2024-01-20",
+      "notes": "Set up PayPal business account and integrate payment gateway"
+    },
+    {
+      "id": "task-4",
+      "title": "Outreach starten",
+      "project": "0002",
+      "projectName": "Revenue Machine",
+      "priority": "medium",
+      "status": "backlog",
+      "created": "2024-01-22",
+      "notes": "Begin cold outreach campaign to potential customers"
+    },
+    {
+      "id": "task-5",
+      "title": "Konzept finalisieren",
+      "project": "0001",
+      "projectName": "DenkWende",
+      "priority": "high",
+      "status": "done",
+      "created": "2023-12-01",
+      "notes": "Final concept document with methodology and approach"
+    },
+    {
+      "id": "task-6",
+      "title": "Partner-Gespräche",
+      "project": "0001",
+      "projectName": "DenkWende",
+      "priority": "low",
+      "status": "backlog",
+      "created": "2023-12-15",
+      "notes": "Schedule meetings with potential collaboration partners"
+    },
+    {
+      "id": "task-7",
+      "title": "Marktanalyse durchführen",
+      "project": "0001",
+      "projectName": "DenkWende",
+      "priority": "medium",
+      "status": "in-progress",
+      "created": "2024-01-05",
+      "notes": "Research market trends and competitor analysis"
+    },
+    {
+      "id": "task-8",
+      "title": "SEO Optimierung",
+      "project": "0002",
+      "projectName": "Revenue Machine",
+      "priority": "low",
+      "status": "backlog",
+      "created": "2024-01-25",
+      "notes": "Optimize website for search engines and keywords"
+    }
+  ]
+}

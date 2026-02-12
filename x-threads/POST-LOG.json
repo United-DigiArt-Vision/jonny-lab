@@ -1,0 +1,186 @@
+{
+  "description": "Tracking aller geposteten X/Twitter Threads. VOR jedem neuen Thread hier prüfen ob Thema schon gepostet wurde!",
+  "posts": [
+    {
+      "date": "2026-02-06",
+      "file": "2026-02-06-ai-war-v4.md",
+      "topic": "AI War — OpenAI vs Anthropic vs Google Konkurrenzkampf",
+      "keywords": [
+        "OpenAI",
+        "Anthropic",
+        "Google",
+        "AI war",
+        "competition",
+        "funding"
+      ],
+      "account": "@DaBrusi",
+      "url": "https://x.com/DaBrusi/status/2019690657212952826",
+      "status": "posted"
+    },
+    {
+      "date": "2026-02-08",
+      "file": "2026-02-08-anthropic-superbowl.md",
+      "topic": "Anthropic vs OpenAI — Super Bowl AI Ad War",
+      "keywords": [
+        "Anthropic",
+        "OpenAI",
+        "Super Bowl",
+        "ads",
+        "Claude",
+        "ChatGPT"
+      ],
+      "account": "@DaBrusi",
+      "url": null,
+      "status": "posted"
+    },
+    {
+      "date": "2026-02-09",
+      "file": "2026-02-09-anthropic-20b-funding.md",
+      "topic": "Anthropic $20B+ Funding Round at $350B Valuation",
+      "keywords": [
+        "Anthropic",
+        "funding",
+        "$20B",
+        "$350B",
+        "valuation",
+        "Claude",
+        "Opus 4.6",
+        "revenue",
+        "investors"
+      ],
+      "account": "@DaBrusi",
+      "url": "https://x.com/DaBrusi/status/2020715908583629148",
+      "status": "posted"
+    },
+    {
+      "date": "2026-02-09",
+      "file": "2026-02-09-anthropic-10gw-datacenter.md",
+      "topic": "Anthropic 10 GW Data Center Empire — Ex-Google Veterans Building $500B Infrastructure",
+      "keywords": [
+        "Anthropic",
+        "data center",
+        "10 GW",
+        "gigawatt",
+        "infrastructure",
+        "$500B",
+        "Google",
+        "power",
+        "IPO"
+      ],
+      "account": "@DaBrusi",
+      "url": "https://x.com/DaBrusi/status/2020969312937529437",
+      "status": "posted"
+    },
+    {
+      "date": "2026-02-10",
+      "file": "2026-02-10-openai-chatgpt-ads.md",
+      "topic": "OpenAI Launches Ads in ChatGPT — Free & Go Users Now See Sponsored Content",
+      "keywords": [
+        "OpenAI",
+        "ChatGPT",
+        "ads",
+        "advertising",
+        "monetization",
+        "free tier",
+        "privacy",
+        "data"
+      ],
+      "account": "@DaBrusi",
+      "url": "https://x.com/DaBrusi/status/2021103030096019474",
+      "status": "posted"
+    },
+    {
+      "date": "2026-02-10",
+      "file": "2026-02-10-openai-new-model-growth.md",
+      "topic": "OpenAI New Chat Model This Week + ChatGPT Growth Surge + $100B Funding",
+      "keywords": [
+        "OpenAI",
+        "ChatGPT",
+        "new model",
+        "GPT-5.3",
+        "growth",
+        "Codex",
+        "ads",
+        "$100B",
+        "funding",
+        "Anthropic"
+      ],
+      "account": "@DaBrusi",
+      "url": "https://x.com/DaBrusi/status/2021137796958744770",
+      "status": "posted"
+    },
+    {
+      "date": "2026-02-10",
+      "time": "11:25",
+      "topic": "Mrinank Sharma Anthropic AI Safety Resignation",
+      "threadUrl": "https://x.com/DaBrusi/status/2021167923482481049",
+      "tweets": 10,
+      "replyJacks": [],
+      "freshness": "<1h",
+      "score": "9/10",
+      "source": "Meleys Speed Patrol (Grok + Brave)"
+    },
+    {
+      "date": "2026-02-10",
+      "time": "13:45",
+      "topic": "OpenClaw Goes Mainstream — SwitchBot AI Hub",
+      "file": "2026-02-10_openclaw-mainstream.md",
+      "threadUrl": "https://x.com/DaBrusi/status/2021204095521141037",
+      "tweets": 10,
+      "status": "posted",
+      "score": "8/10",
+      "source": "Meleys Speed Patrol",
+      "freshness": "<24h"
+    },
+    {
+      "date": "2026-02-10",
+      "time": "19:00",
+      "topic": "Runway AI $315M Series E at $5.3B Valuation",
+      "file": "2026-02-10_runway-315m-funding.md",
+      "keywords": [
+        "Runway",
+        "AI video",
+        "world models",
+        "funding",
+        "$315M",
+        "$5.3B",
+        "General Atlantic",
+        "Nvidia",
+        "Adobe",
+        "Gen 4.5"
+      ],
+      "account": "@DaBrusi",
+      "url": null,
+      "status": "prepared",
+      "score": "8/10",
+      "source": "Meleys Speed Patrol (Grok)",
+      "freshness": "~5h",
+      "blocker": "X automation detection — needs manual posting"
+    },
+    {
+      "date": "2026-02-10",
+      "time": "21:00",
+      "topic": "OpenAI Violates CA AI Safety Law — GPT-5.3-Codex",
+      "file": "2026-02-10_openai-ca-law-violation.md",
+      "keywords": [
+        "OpenAI",
+        "GPT-5.3-Codex",
+        "California",
+        "SB 53",
+        "AI safety law",
+        "violation",
+        "Midas Project",
+        "watchdog",
+        "cybersecurity",
+        "regulation"
+      ],
+      "account": "@DaBrusi",
+      "url": null,
+      "status": "prepared",
+      "score": "9/10",
+      "source": "Meleys Speed Patrol (Grok + Fortune)",
+      "freshness": "<3h",
+      "blocker": "X automation detection — needs manual posting"
+    }
+  ]
+}
