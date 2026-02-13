@@ -53,6 +53,59 @@
 4. **Web Fetch auf offizielle Links** — für Details zu kritischen Themen
 5. **Web Search** — für Kontext (Security Breaches, Drama, Marktbewegungen)
 
+---
+
+## 🐦 X/Twitter Tweets lesen — Fallback-Kette (PFLICHT!)
+
+**Bei JEDEM X/Twitter-Link diese Stufen durchgehen bis einer funktioniert:**
+
+| Stufe | Methode | Wie |
+|-------|---------|-----|
+| 1 | **fxtwitter API** | `web_fetch https://api.fxtwitter.com/{user}/status/{id}` |
+| 2 | **Syndication API** | `web_fetch https://cdn.syndication.twimg.com/tweet-result?id={id}&token=0` |
+| 3 | **vxtwitter** | `web_fetch https://vxtwitter.com/{user}/status/{id}` |
+| 4 | **Nitter Instanzen** | `web_fetch https://nitter.net/{user}/status/{id}` |
+| 5 | **Brave Search** | `web_search` mit Tweet-ID oder Zitat |
+| 6 | **Browser Relay** | `browser` → x.com direkt öffnen |
+
+**Parsing:**
+- Normaler Tweet → `tweet.text` im JSON
+- X Article (Langform) → `tweet.article.content.blocks[].text` — Blöcke mit `\n\n` zusammenbauen
+- Tweet-ID aus URL: `https://x.com/{user}/status/{ID}` → ID = Zahl am Ende
+
+**fxtwitter funktioniert fast immer. Stufe 1 zuerst!**
+
+---
+
+## 🎬 YouTube Transkripte lesen — Fallback-Kette (PFLICHT!)
+
+**Video-ID extrahieren:** `https://www.youtube.com/watch?v={ID}` oder `https://youtu.be/{ID}`
+
+| Stufe | Methode | Wie |
+|-------|---------|-----|
+| 1 | **summarize --extract** | `summarize "URL" --extract --plain` |
+| 2 | **yt-dlp mit Cookies** | `yt-dlp --cookies-from-browser "chrome:/Users/macmini001/.openclaw/browser/openclaw/user-data/Default" --write-auto-sub --sub-lang en --sub-format json3 --skip-download -o "/tmp/yt-{ID}" "URL"` |
+| 3 | **summarize + yt-dlp** | `summarize "URL" --extract --youtube yt-dlp --plain` |
+| 4 | **Transkript-Services** | `web_fetch https://youtubetranscript.com?v={ID}` |
+| 5 | **Browser Relay** | YouTube öffnen → Transkript anzeigen → kopieren → **Tab SOFORT schließen!** |
+
+**yt-dlp json3 parsen:**
+```python
+import json
+with open('/tmp/yt-{ID}.en.json3') as f:
+    data = json.load(f)
+text = []
+for e in data.get('events', []):
+    for s in e.get('segs', []):
+        t = s.get('utf8', '').strip()
+        if t and t != '\n': text.append(t)
+print(' '.join(text))
+```
+
+**Sprachen:** `--sub-lang de` für Deutsch, `en` für Englisch.
+**WICHTIG:** Stufe 2 (yt-dlp + Cookies) ist die zuverlässigste! Umgeht Bot-Detection.
+**Nach Browser-Methode: Tab SOFORT schließen (Auto-Play!)**
+
 ## 📺 Weekly AI Review — Prozess-Learnings
 - Video-Beschreibung + Kapitel als Basis nutzen (spart Token vs. Transkript)
 - Nur für 🔴 Themen die Originalquellen per Web Fetch vertiefen

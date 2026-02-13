@@ -13,6 +13,13 @@
 
 **Ziel:** Dino wacht auf und denkt "wow, du hast viel geschafft."
 
+### Session-Kontext nutzen (Steinberger-Prinzip)
+> Der Heartbeat ist am wertvollsten wenn er auf den aktuellen Kontext aufbaut.
+> - Was wurde zuletzt besprochen? → Follow-up darauf
+> - Gibt es offene Fragen/Tasks? → Weiterarbeiten
+> - Hat sich seit dem letzten Gespräch etwas geändert? → Proaktiv melden
+> - Nicht nur Routine-Checks, sondern echte Weiterarbeit an laufenden Projekten
+
 ---
 
 ## 🔴 KRITISCH — JEDER HEARTBEAT

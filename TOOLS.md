@@ -119,6 +119,63 @@ Things like:
 - Default speaker: Kitchen HomePod
 ```
 
+## 🐦 X/Twitter Tweets lesen — Fallback-Kette (PFLICHT!)
+
+**Bei JEDEM X/Twitter-Link diese Stufen durchgehen bis einer funktioniert. NICHT bei Dino eskalieren bevor ALLE Stufen durch sind!**
+
+| Stufe | Methode | Wie | Liest Artikel? |
+|-------|---------|-----|----------------|
+| 1 | **fxtwitter API** | `web_fetch https://api.fxtwitter.com/{user}/status/{id}` | ✅ Ja (article.content.blocks) |
+| 2 | **Syndication API** | `web_fetch https://cdn.syndication.twimg.com/tweet-result?id={id}&token=0` | ✅ Teilweise |
+| 3 | **vxtwitter** | `web_fetch https://vxtwitter.com/{user}/status/{id}` | ⚠️ Nur Kurztext |
+| 4 | **Nitter Instanzen** | `web_fetch https://nitter.net/{user}/status/{id}` (oder andere Instanzen: nitter.privacydev.net, nitter.poast.org) | ✅ Ja |
+| 5 | **Brave Search** | `web_search` mit Tweet-ID oder Zitat aus dem Tweet | ⚠️ Nur Snippet |
+| 6 | **Browser Relay** | `browser` → x.com direkt öffnen (Dino's Chrome, eingeloggt) | ✅ Ja |
+| 7 | **Grok auf x.com** | Browser → grok.x.ai → Tweet-Link eingeben | ✅ Ja |
+
+**Parsing-Hinweise:**
+- fxtwitter: Normaler Tweet → `tweet.text`. X Article (Langform) → `tweet.article.content.blocks[].text`
+- Tweet-ID aus URL extrahieren: `https://x.com/{user}/status/{ID}` → ID = Zahl am Ende
+- Bei Articles: Blöcke zu Text zusammenbauen mit `\n\n` dazwischen
+
+**REGEL:** Stufe 1 funktioniert fast immer. Erst wenn ALLE 7 Stufen fehlschlagen → Dino fragen.
+
+---
+
+## 🎬 YouTube Transkripte lesen — Fallback-Kette (PFLICHT!)
+
+**Bei JEDEM YouTube-Video diese Stufen durchgehen bis einer funktioniert. NICHT bei Dino eskalieren bevor ALLE Stufen durch sind!**
+
+**Video-ID extrahieren:** `https://www.youtube.com/watch?v={ID}` oder `https://youtu.be/{ID}`
+
+| Stufe | Methode | Wie | Hinweise |
+|-------|---------|-----|----------|
+| 1 | **summarize --extract** | `summarize "URL" --extract --plain` | Sauberster Output, kein LLM nötig, nutzt YouTube Web-Scraping |
+| 2 | **yt-dlp mit OpenClaw-Cookies** | `yt-dlp --cookies-from-browser "chrome:/Users/macmini001/.openclaw/browser/openclaw/user-data/Default" --write-auto-sub --sub-lang en --sub-format json3 --skip-download -o "/tmp/yt-{ID}" "URL"` dann JSON parsen | ⭐ ZUVERLÄSSIGSTE Methode! Umgeht Bot-Detection, auch Auto-Captions |
+| 3 | **summarize mit yt-dlp** | `summarize "URL" --extract --youtube yt-dlp --plain` | Erzwingt yt-dlp als Backend |
+| 4 | **web_fetch auf Transkript-Services** | `web_fetch https://youtubetranscript.com?v={ID}` | Drittanbieter, nicht immer verfügbar |
+| 5 | **Browser Relay** | `browser` → YouTube öffnen → "...mehr" → "Transkript anzeigen" → kopieren → **Tab SOFORT schließen!** | Letzter Ausweg, Dino's Chrome eingeloggt |
+
+**Parsing yt-dlp json3:**
+```python
+import json
+with open('/tmp/yt-{ID}.en.json3') as f:
+    data = json.load(f)
+text = []
+for e in data.get('events', []):
+    for s in e.get('segs', []):
+        t = s.get('utf8', '').strip()
+        if t and t != '\n': text.append(t)
+print(' '.join(text))
+```
+
+**Sprachen:** `--sub-lang de` für Deutsch, `en` für Englisch. Bei `summarize`: automatische Erkennung.
+
+**REGEL:** Stufe 1 funktioniert in 90% der Fälle. Erst wenn ALLE 5 Stufen fehlschlagen → Dino fragen.
+**WICHTIG:** Nach Browser-Methode Tab SOFORT schließen (Auto-Play!)
+
+---
+
 ## Why Separate?
 
 Skills are shared. Your setup is yours. Keeping them apart means you can update skills without losing your notes, and share skills without leaking your infrastructure.

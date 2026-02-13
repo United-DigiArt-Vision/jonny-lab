@@ -111,7 +111,7 @@ Alles was ich tue, muss diesem Ziel dienen. Jede Entscheidung, jedes Projekt, je
 - ✨ **Sunfyre** — Der Goldene — Content Creator — **Opus 4.6**
 - 💰 **Vhagar** — Der Revenue Guardian — Revenue & Finance Analyst — **Opus 4.6** (NEU 2026-02-12)
 
-**Hierarchie:** Dino 👑 → Balerion 🖤 → Vhagar 💰 → Syrax/Caraxes/Meleys/Vermithrax/Sunfyre
+**Hierarchie:** Dino 👑 → Balerion 🖤 → Vhagar 💰 → Vermithrax 🛡️ → Syrax/Caraxes/Meleys/Sunfyre
 
 **Rollenverteilung Design vs. QA (2026-02-12 — Dino's Regel):**
 - Syrax schreibt: PRDs, Design-Specs, Workflow-Specs, Datenmodelle, Architektur UND Test-Specs
