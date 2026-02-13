@@ -323,6 +323,13 @@ Short version: read template first, preflight log, POST-LOG check, post, verify 
 
 Short version: PRD first, implement against PRD, test everything (function, data, visuals, cross-check), completion report, only deliver when all passes.
 
+**⚠️ TEST-STRATEGIE WÄHLEN (PFLICHT!):**
+- UI/CSS/Layout → **Visuelles Testing** (Browser-Screenshot + Zoom 200%+)
+- Datenstruktur → Grep + JSON-Validation
+- JS-Logik → Console-Errors + Funktionstest
+- Text → Read/Grep reicht
+**Nie die falsche Strategie verwenden!** CSS-Änderung mit grep testen = FAIL.
+
 ---
 
 ### Habit: Änderungen überall durchziehen

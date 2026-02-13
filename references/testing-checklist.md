@@ -1,4 +1,22 @@
-# Testing Checklist (PRD → Implement → Test)
+# Testing Checklist
+
+## Test-Strategie: Wann welches Testing? (PFLICHT!)
+
+| Änderungstyp | Strategie | Wie |
+|-------------|-----------|-----|
+| **UI/CSS/Layout** | **Visuelles Testing PFLICHT** | Browser-Screenshot, mit Zoom auf betroffene Elemente |
+| **Datenstruktur** | Grep + JSON-Validation | Dateien lesen, Konsistenz prüfen |
+| **JS-Logik** | Browser Console + Funktionstest | Seite laden, Console-Errors prüfen, Funktionalität testen |
+| **API/Backend** | Curl/exec + Response-Check | Endpoints aufrufen, Status prüfen |
+| **Rein textuelle Änderungen** | Grep/Read reicht | Datei lesen, Inhalt verifizieren |
+
+### Visuelles Testing — Wann PFLICHT?
+- Jede CSS/Style-Änderung
+- Jede Layout-Änderung (Reihenfolge, Größe, Position)
+- Jede Typografie-Änderung (Font-Size, Alignment, Hochstellung)
+- Jede neue UI-Komponente
+- **Immer Browser-Screenshot VOR Lieferung an Dino**
+- **Bei Positionierung: Zoom auf 200-300% um Details zu prüfen** (PRD → Implement → Test)
 
 ## 1. PRD first (before coding)
 - What exactly to build/change?
