@@ -1,0 +1,2240 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>Balerion Mission Control 🐉</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { 
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #0a0e1a; 
+    color: #e2e8f0;
+    min-height: 100vh;
+  }
+
+  /* Navigation */
+  nav {
+    display: flex; gap: 8px; padding: 16px 24px;
+    background: #111827; border-bottom: 1px solid #1e293b;
+    flex-wrap: wrap; align-items: center;
+  }
+  nav .logo { font-size: 20px; font-weight: 700; margin-right: 16px; }
+  nav .logo span { color: #ef4444; }
+  nav button {
+    padding: 8px 16px; border-radius: 8px; border: none;
+    background: #1e293b; color: #94a3b8; cursor: pointer;
+    font-size: 14px; transition: all 0.2s;
+  }
+  nav button:hover, nav button.active { background: #334155; color: #f1f5f9; }
+  nav button.active { border-bottom: 2px solid #ef4444; }
+
+  /* Tabs */
+  .tab { display: none; padding: 24px; }
+  .tab.active { display: block; }
+
+  /* ORG CHART */
+  .org-chart { display: flex; flex-direction: column; align-items: center; gap: 24px; padding: 40px 20px; }
+  
+  .org-line { width: 2px; height: 32px; background: #334155; }
+  .org-line-h { display: flex; align-items: flex-start; justify-content: center; position: relative; }
+  .org-line-h::before {
+    content: ''; position: absolute; top: 0;
+    width: 60%; height: 2px; background: #334155;
+  }
+
+  .agent-card {
+    background: linear-gradient(135deg, #1e293b, #0f172a);
+    border: 1px solid #334155; border-radius: 16px;
+    padding: 24px; min-width: 280px; max-width: 340px;
+    position: relative; transition: all 0.3s;
+  }
+  .agent-card:hover { border-color: #ef4444; transform: translateY(-2px); box-shadow: 0 8px 32px rgba(239,68,68,0.15); }
+  
+  .agent-card.primary { border-color: #ef4444; box-shadow: 0 0 24px rgba(239,68,68,0.2); }
+  .agent-card .dragon-avatar { font-size: 32px; }
+  .agent-card .dragon-avatar img { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; }
+
+  /* Dragon Avatar System */
+  .dragon-av { display: inline-block; border-radius: 50%; object-fit: cover; vertical-align: middle; margin-right: 4px; }
+  .dragon-av-sm { width: 20px; height: 20px; border-width: 2px; border-style: solid; }
+  .dragon-av-md { width: 32px; height: 32px; border-width: 2px; border-style: solid; }
+  .dragon-av-lg { width: 48px; height: 48px; border-width: 2px; border-style: solid; }
+  .dragon-av-balerion { border-color: #64748b; }
+  .dragon-av-caraxes { border-color: #ef4444; }
+  .dragon-av-meleys { border-color: #f43f5e; }
+  .dragon-av-vermithrax { border-color: #f97316; }
+  .dragon-av-sunfyre { border-color: #f59e0b; }
+  .dragon-av-vhagar { border-color: #3b82f6; }
+  .dragon-av-syrax { border-color: #67e8f9; }
+  .dragon-av-dino { border-color: #a855f7; }
+  .agent-card.coding { border-color: #22c55e; }
+  .agent-card.research { border-color: #3b82f6; }
+  .agent-card.content { border-color: #a855f7; }
+  .agent-card.qa { border-color: #f97316; }
+  .agent-card.revenue { border-color: #3b82f6; box-shadow: 0 0 16px rgba(59,130,246,0.15); }
+
+  .agent-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+  .agent-icon { font-size: 32px; }
+  .agent-name { font-size: 18px; font-weight: 700; }
+  .agent-role { font-size: 13px; color: #94a3b8; }
+
+  .agent-model {
+    display: inline-block; padding: 4px 10px; border-radius: 6px;
+    font-size: 12px; font-family: monospace; margin: 8px 0;
+    background: #1a1a2e; border: 1px solid #334155;
+  }
+  .agent-cost { font-size: 12px; color: #64748b; margin-bottom: 12px; }
+  .agent-cost span { color: #22c55e; }
+
+  .agent-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+  .tag {
+    padding: 4px 10px; border-radius: 20px; font-size: 11px;
+    background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+  }
+  .tag.red { background: rgba(239,68,68,0.1); border-color: rgba(239,68,68,0.3); color: #fca5a5; }
+  .tag.green { background: rgba(34,197,94,0.1); border-color: rgba(34,197,94,0.3); color: #86efac; }
+  .tag.blue { background: rgba(59,130,246,0.1); border-color: rgba(59,130,246,0.3); color: #93c5fd; }
+  .tag.purple { background: rgba(168,85,247,0.1); border-color: rgba(168,85,247,0.3); color: #d8b4fe; }
+
+  .status-dot {
+    width: 12px; height: 12px; border-radius: 50%;
+    position: absolute; top: 16px; right: 16px;
+  }
+  .status-dot.online, .status-dot.flying { background: #22c55e; box-shadow: 0 0 8px #22c55e; }
+  .status-dot.ruling { background: #f59e0b; box-shadow: 0 0 8px #f59e0b; }
+  .status-dot.sleeping { background: #64748b; }
+  .status-dot.fighting { background: #ef4444; box-shadow: 0 0 8px #ef4444; }
+  .status-dot.planned { background: #f59e0b; box-shadow: 0 0 8px #f59e0b; }
+  .status-dot.future { background: #64748b; }
+
+  .sub-agents { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; }
+
+  /* MISSION CONTROL */
+  .dashboard { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; }
+  
+  .panel {
+    background: #111827; border: 1px solid #1e293b; border-radius: 12px;
+    padding: 20px;
+  }
+  .panel h3 { font-size: 14px; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 16px; }
+  
+  .project-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 0; border-bottom: 1px solid #1e293b;
+  }
+  .project-row:last-child { border: none; }
+  .prio { font-size: 20px; }
+  .project-name { font-weight: 600; flex: 1; }
+  .project-status {
+    padding: 4px 10px; border-radius: 20px; font-size: 11px;
+  }
+  .status-active { background: rgba(239,68,68,0.15); color: #fca5a5; }
+  .status-paused { background: rgba(100,116,139,0.15); color: #94a3b8; }
+
+  .metric { text-align: center; padding: 16px; }
+  .metric-value { font-size: 36px; font-weight: 800; }
+  .metric-label { font-size: 12px; color: #64748b; margin-top: 4px; }
+  .metric-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+
+  .checklist-item { display: flex; align-items: center; gap: 8px; padding: 8px 0; }
+  .checklist-item .check { font-size: 16px; }
+
+  .timeline-item { padding: 12px 0; border-left: 2px solid #334155; padding-left: 16px; margin-left: 8px; position: relative; }
+  .timeline-item::before {
+    content: ''; width: 10px; height: 10px; border-radius: 50%;
+    background: #334155; position: absolute; left: -6px; top: 16px;
+  }
+  .timeline-item.done::before { background: #22c55e; }
+  .timeline-item.active::before { background: #ef4444; box-shadow: 0 0 8px #ef4444; }
+  .timeline-date { font-size: 12px; color: #64748b; }
+  .timeline-text { font-size: 14px; margin-top: 2px; }
+
+  /* VISION */
+  .vision-bar { 
+    background: #1e293b; border-radius: 12px; height: 40px; 
+    overflow: hidden; margin: 12px 0; position: relative;
+  }
+  .vision-fill {
+    height: 100%; border-radius: 12px;
+    background: linear-gradient(90deg, #ef4444, #f97316);
+    display: flex; align-items: center; justify-content: flex-end;
+    padding-right: 12px; font-size: 13px; font-weight: 700;
+    transition: width 1s ease;
+  }
+  .vision-label { display: flex; justify-content: space-between; font-size: 12px; color: #64748b; }
+  
+  .bridge-visual {
+    display: flex; align-items: center; justify-content: center;
+    gap: 16px; padding: 24px; font-size: 14px;
+  }
+  .bridge-side { 
+    padding: 12px 20px; border-radius: 8px; text-align: center;
+    font-weight: 600;
+  }
+  .bridge-real { background: rgba(34,197,94,0.15); border: 1px solid rgba(34,197,94,0.3); }
+  .bridge-digital { background: rgba(59,130,246,0.15); border: 1px solid rgba(59,130,246,0.3); }
+  .bridge-arrow { font-size: 24px; color: #ef4444; animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100% { opacity: 0.5; } 50% { opacity: 1; } }
+
+  .legend { display: flex; gap: 16px; margin-top: 16px; flex-wrap: wrap; }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #94a3b8; }
+  .legend-dot { width: 10px; height: 10px; border-radius: 50%; }
+
+  /* DRAGONS TAB — Pokémon Card Style */
+  .dragons-container { display: flex; flex-direction: column; align-items: center; gap: 24px; padding: 24px 20px; max-width: 1200px; margin: 0 auto; }
+  .dragon-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; width: 100%; }
+  @media (max-width: 1024px) { .dragon-row { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 640px) { .dragon-row { grid-template-columns: 1fr; } }
+
+  /* Pokémon Card */
+  .pkmn-card {
+    border-radius: 16px; padding: 2px; position: relative; transition: all 0.3s ease;
+    cursor: default;
+  }
+  .pkmn-card:hover { transform: translateY(-4px); }
+  .pkmn-card-inner {
+    background: #0f172a; border-radius: 14px; padding: 20px; height: 100%;
+    display: flex; flex-direction: column;
+  }
+  /* Color variants — outer gradient border */
+  .pkmn-balerion { background: linear-gradient(135deg, #1a1a2e, #4a1942, #1a1a2e); }
+  .pkmn-balerion:hover { box-shadow: 0 0 28px rgba(74,25,66,0.5); }
+  .pkmn-caraxes { background: linear-gradient(135deg, #7f1d1d, #ef4444, #7f1d1d); }
+  .pkmn-caraxes:hover { box-shadow: 0 0 28px rgba(239,68,68,0.5); }
+  .pkmn-meleys { background: linear-gradient(135deg, #831843, #f43f5e, #831843); }
+  .pkmn-meleys:hover { box-shadow: 0 0 28px rgba(244,63,94,0.5); }
+  .pkmn-vermithrax { background: linear-gradient(135deg, #7c2d12, #f97316, #7c2d12); }
+  .pkmn-vermithrax:hover { box-shadow: 0 0 28px rgba(249,115,22,0.5); }
+  .pkmn-sunfyre { background: linear-gradient(135deg, #78350f, #f59e0b, #78350f); }
+  .pkmn-sunfyre:hover { box-shadow: 0 0 28px rgba(245,158,11,0.5); }
+  .pkmn-vhagar { background: linear-gradient(135deg, #1e3a5f, #3b82f6, #1e3a5f); }
+  .pkmn-vhagar:hover { box-shadow: 0 0 28px rgba(59,130,246,0.5); }
+  .pkmn-dino { background: linear-gradient(135deg, #4c1d95, #a855f7, #4c1d95); }
+  .pkmn-dino:hover { box-shadow: 0 0 28px rgba(168,85,247,0.5); }
+
+  /* Card header */
+  .pkmn-header { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+  .pkmn-emoji { font-size: 28px; }
+  .pkmn-name { font-size: 18px; font-weight: 800; flex: 1; }
+  .pkmn-status-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+  .pkmn-status-dot.active { background: #22c55e; box-shadow: 0 0 8px #22c55e; }
+  .pkmn-status-dot.planned { background: #f59e0b; box-shadow: 0 0 8px #f59e0b; }
+  .pkmn-status-dot.idle { background: #475569; }
+  .pkmn-beiname { font-size: 12px; color: #94a3b8; font-style: italic; margin-bottom: 12px; }
+
+  .pkmn-divider { height: 1px; background: linear-gradient(90deg, transparent, #334155, transparent); margin: 8px 0; }
+
+  /* Card sections */
+  .pkmn-section { margin-bottom: 10px; }
+  .pkmn-section-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #64748b; margin-bottom: 4px; }
+  .pkmn-list { list-style: none; padding: 0; }
+  .pkmn-list li { font-size: 12px; color: #cbd5e1; padding: 1px 0; padding-left: 14px; position: relative; }
+  .pkmn-list li::before { content: '•'; position: absolute; left: 2px; color: #64748b; }
+
+  .pkmn-tools { display: flex; flex-wrap: wrap; gap: 4px; }
+  .pkmn-tool-tag { padding: 2px 8px; border-radius: 10px; font-size: 10px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); color: #94a3b8; }
+
+  .pkmn-model { font-size: 11px; font-family: monospace; color: #64748b; margin-top: auto; padding-top: 8px; }
+
+  /* Live status bar at bottom */
+  .pkmn-live { margin-top: 8px; padding-top: 10px; border-top: 1px solid #1e293b; }
+  .pkmn-live-status { font-size: 12px; font-weight: 600; margin-bottom: 4px; }
+  .pkmn-live-mission { font-size: 11px; color: #64748b; }
+  .pkmn-live-time { font-size: 10px; color: #475569; }
+
+  /* Dino king card (wider, centered) */
+  .pkmn-king { max-width: 480px; width: 100%; }
+
+  /* Activity log inside card */
+  .pkmn-log { margin-top: 6px; }
+  .pkmn-log-entry { font-size: 11px; color: #64748b; display: flex; gap: 6px; align-items: baseline; padding: 1px 0; }
+  .pkmn-log-time { color: #f59e0b; font-family: monospace; font-size: 10px; white-space: nowrap; }
+
+  /* X REVENUE */
+  .x-header { text-align: center; padding: 20px; grid-column: 1 / -1; }
+  .x-header h2 { font-size: 28px; margin-bottom: 4px; }
+  .x-header .x-account { font-size: 18px; color: #1d9bf0; font-weight: 600; }
+  .x-header .x-plan { display: inline-block; padding: 4px 12px; border-radius: 20px; background: rgba(29,155,240,0.15); color: #1d9bf0; font-size: 13px; margin-top: 8px; }
+  
+  .x-progress-bar { background: #1e293b; border-radius: 12px; height: 32px; overflow: hidden; margin: 8px 0; position: relative; }
+  .x-progress-fill { height: 100%; border-radius: 12px; display: flex; align-items: center; justify-content: flex-end; padding-right: 10px; font-size: 12px; font-weight: 700; transition: width 1s ease; min-width: 40px; }
+  .x-progress-fill.blue { background: linear-gradient(90deg, #1d9bf0, #0070c0); }
+  .x-progress-fill.gold { background: linear-gradient(90deg, #f59e0b, #d97706); }
+  .x-progress-fill.green { background: linear-gradient(90deg, #22c55e, #16a34a); }
+  .x-progress-label { display: flex; justify-content: space-between; font-size: 13px; color: #94a3b8; margin-bottom: 4px; }
+  
+  .x-milestone { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid #1e293b; font-size: 14px; }
+  .x-milestone:last-child { border: none; }
+  .x-milestone .ms-icon { font-size: 18px; }
+  
+  .x-flywheel { text-align: center; padding: 20px; }
+  .x-flywheel-step { display: inline-block; padding: 8px 16px; margin: 4px; border-radius: 8px; font-size: 13px; }
+  .x-flywheel-arrow { color: #ef4444; font-size: 20px; margin: 0 4px; }
+  
+  .x-strategy-item { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid #1e293b; font-size: 14px; }
+  .x-strategy-item:last-child { border: none; }
+  .x-strategy-status { padding: 3px 10px; border-radius: 12px; font-size: 11px; }
+  .x-strategy-status.active { background: rgba(34,197,94,0.15); color: #86efac; }
+  .x-strategy-status.todo { background: rgba(245,158,11,0.15); color: #fcd34d; }
+  
+  .x-revenue-card { display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 10px; margin-bottom: 8px; }
+  .x-revenue-card.locked { background: rgba(100,116,139,0.1); border: 1px solid #334155; }
+  .x-revenue-card.active { background: rgba(34,197,94,0.08); border: 1px solid rgba(34,197,94,0.3); }
+  .x-revenue-type { padding: 3px 8px; border-radius: 8px; font-size: 10px; text-transform: uppercase; font-weight: 700; }
+  .x-revenue-type.direkt { background: rgba(34,197,94,0.2); color: #86efac; }
+  .x-revenue-type.indirekt { background: rgba(59,130,246,0.2); color: #93c5fd; }
+
+  /* === NEW TABS STYLES === */
+
+  /* Flowchart styles */
+  .flow-container { margin: 20px 0; }
+  .flow-title { font-size: 18px; font-weight: 700; margin-bottom: 16px; padding: 12px 16px; border-radius: 10px; background: #111827; border-left: 4px solid #ef4444; }
+  .flow-steps { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 12px 0; }
+  .flow-step { padding: 10px 16px; border-radius: 10px; font-size: 13px; line-height: 1.4; max-width: 220px; min-width: 120px; text-align: center; border: 1px solid #334155; position: relative; }
+  .flow-step .step-who { font-size: 11px; font-weight: 700; display: block; margin-bottom: 2px; }
+  .flow-step .step-tool { font-size: 10px; color: #64748b; display: block; margin-top: 2px; font-family: monospace; }
+  .flow-arrow { font-size: 20px; color: #ef4444; font-weight: 700; flex-shrink: 0; }
+  .flow-decision { border: 2px dashed #f59e0b; background: rgba(245,158,11,0.08); }
+  /* Dragon colors for flow steps */
+  .step-balerion { background: rgba(30,41,59,0.8); border-color: #64748b; }
+  .step-caraxes { background: rgba(239,68,68,0.1); border-color: rgba(239,68,68,0.4); }
+  .step-meleys { background: rgba(244,63,94,0.1); border-color: rgba(244,63,94,0.4); }
+  .step-vermithrax { background: rgba(249,115,22,0.1); border-color: rgba(249,115,22,0.4); }
+  .step-sunfyre { background: rgba(234,179,8,0.1); border-color: rgba(234,179,8,0.4); }
+  .step-vhagar { background: rgba(34,197,94,0.1); border-color: rgba(34,197,94,0.4); }
+  .step-dino { background: rgba(168,85,247,0.1); border-color: rgba(168,85,247,0.4); }
+  .step-system { background: rgba(59,130,246,0.1); border-color: rgba(59,130,246,0.4); }
+  .step-stop { background: rgba(239,68,68,0.2); border-color: #ef4444; }
+
+  /* Timeline for daily ops */
+  .ops-timeline { display: flex; flex-direction: column; gap: 8px; }
+  .ops-time-row { display: flex; align-items: center; gap: 12px; padding: 8px 12px; border-radius: 8px; background: #111827; }
+  .ops-time { font-family: monospace; color: #f59e0b; font-weight: 700; min-width: 50px; font-size: 14px; }
+  .ops-desc { font-size: 13px; flex: 1; }
+  .ops-dragon { font-size: 12px; color: #94a3b8; min-width: 80px; text-align: right; }
+
+  /* RACI Matrix */
+  .raci-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .raci-table th { padding: 10px 8px; background: #111827; border: 1px solid #1e293b; font-weight: 600; text-align: center; position: sticky; top: 0; }
+  .raci-table td { padding: 8px; border: 1px solid #1e293b; text-align: center; }
+  .raci-table tr:hover td { background: rgba(255,255,255,0.03); }
+  .raci-table td:first-child { text-align: left; font-weight: 600; min-width: 150px; }
+  .raci-r { background: rgba(34,197,94,0.2); color: #86efac; font-weight: 700; border-radius: 4px; cursor: help; }
+  .raci-a { background: rgba(239,68,68,0.2); color: #fca5a5; font-weight: 700; border-radius: 4px; cursor: help; }
+  .raci-c { background: rgba(234,179,8,0.2); color: #fcd34d; font-weight: 700; border-radius: 4px; cursor: help; }
+  .raci-i { background: rgba(59,130,246,0.2); color: #93c5fd; font-weight: 700; border-radius: 4px; cursor: help; }
+  .raci-none { color: #334155; }
+
+  /* Audit styles */
+  .audit-overview { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; }
+  .audit-stat { background: #111827; border: 1px solid #1e293b; border-radius: 12px; padding: 20px; text-align: center; }
+  .audit-stat .val { font-size: 28px; font-weight: 800; }
+  .audit-stat .lbl { font-size: 12px; color: #64748b; margin-top: 4px; }
+  .assert-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .assert-table th { padding: 8px; background: #111827; border: 1px solid #1e293b; text-align: left; position: sticky; top: 0; font-size: 11px; }
+  .assert-table td { padding: 6px 8px; border: 1px solid #1e293b; }
+  .assert-table tr:hover td { background: rgba(255,255,255,0.03); }
+  .assert-cat { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 600; }
+  .cat-tools { background: rgba(59,130,246,0.15); color: #93c5fd; }
+  .cat-db { background: rgba(168,85,247,0.15); color: #d8b4fe; }
+  .cat-logs { background: rgba(234,179,8,0.15); color: #fcd34d; }
+  .cat-config { background: rgba(34,197,94,0.15); color: #86efac; }
+  .cat-cron { background: rgba(239,68,68,0.15); color: #fca5a5; }
+  .cat-docs { background: rgba(249,115,22,0.15); color: #fdba74; }
+  .cat-workflow { background: rgba(244,63,94,0.15); color: #fda4af; }
+  .cat-fs { background: rgba(100,116,139,0.15); color: #cbd5e1; }
+  .cat-python { background: rgba(96,165,250,0.15); color: #93c5fd; }
+
+  /* Tool cards */
+  .tool-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 20px; }
+  .tool-card { background: #111827; border: 1px solid #1e293b; border-radius: 12px; padding: 20px; }
+  .tool-card h4 { font-size: 16px; margin-bottom: 4px; }
+  .tool-card .tool-path { font-family: monospace; font-size: 11px; color: #64748b; margin-bottom: 8px; }
+  .tool-card .tool-desc { font-size: 13px; color: #94a3b8; margin-bottom: 12px; }
+  .tool-card pre { background: #0a0e1a; border: 1px solid #1e293b; border-radius: 8px; padding: 10px; font-size: 11px; overflow-x: auto; margin: 8px 0; color: #86efac; }
+  .tool-card .tool-workflows { margin-top: 10px; }
+  .tool-card .tool-workflows span { display: inline-block; padding: 3px 8px; border-radius: 12px; font-size: 10px; margin: 2px; background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); color: #fca5a5; cursor: pointer; }
+  .tool-card .tool-db-info { font-size: 11px; color: #64748b; margin-top: 8px; padding-top: 8px; border-top: 1px solid #1e293b; }
+
+  /* Cron cards */
+  .cron-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; margin-bottom: 24px; }
+  .cron-card { background: #111827; border: 1px solid #1e293b; border-radius: 12px; padding: 16px; }
+  .cron-card h4 { font-size: 14px; margin-bottom: 8px; }
+  .cron-card .cron-schedule { font-family: monospace; font-size: 12px; color: #f59e0b; }
+  .cron-card .cron-detail { font-size: 12px; color: #94a3b8; margin-top: 4px; }
+  .cron-timeline-bar { display: flex; height: 24px; background: #0a0e1a; border-radius: 6px; overflow: hidden; margin-top: 24px; position: relative; }
+  .cron-tl-block { position: absolute; height: 100%; border-radius: 3px; opacity: 0.8; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 700; overflow: hidden; }
+  .cron-tl-labels { display: flex; justify-content: space-between; font-size: 10px; color: #475569; margin-top: 4px; }
+
+  /* Data flow diagram */
+  .dataflow { display: flex; flex-wrap: wrap; gap: 24px; justify-content: center; padding: 20px; }
+  .df-node { text-align: center; padding: 16px; border-radius: 12px; min-width: 120px; max-width: 160px; }
+  .df-db { background: rgba(168,85,247,0.1); border: 2px solid rgba(168,85,247,0.4); border-radius: 12px 12px 50% 50% / 12px 12px 24px 24px; }
+  .df-log { background: rgba(234,179,8,0.1); border: 2px solid rgba(234,179,8,0.4); }
+  .df-config { background: rgba(34,197,94,0.1); border: 2px solid rgba(34,197,94,0.4); }
+  .df-node .df-icon { font-size: 28px; margin-bottom: 4px; }
+  .df-node .df-name { font-size: 12px; font-weight: 700; }
+  .df-node .df-path { font-size: 10px; color: #64748b; font-family: monospace; }
+  .df-node .df-rw { font-size: 10px; margin-top: 4px; }
+  .df-section { width: 100%; }
+  .df-section h4 { margin-bottom: 12px; font-size: 14px; }
+
+  /* Governance */
+  .gov-hierarchy { display: flex; flex-direction: column; align-items: center; gap: 0; padding: 20px; }
+  .gov-level { padding: 14px 28px; border-radius: 10px; text-align: center; font-weight: 600; min-width: 280px; font-size: 14px; }
+  .gov-arrow { font-size: 20px; color: #ef4444; }
+  .gov-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 16px; }
+  .gov-table th { padding: 8px; background: #111827; border: 1px solid #1e293b; text-align: left; }
+  .gov-table td { padding: 8px; border: 1px solid #1e293b; }
+  .gov-table tr:hover td { background: rgba(255,255,255,0.03); }
+  .esc-levels { display: flex; flex-direction: column; gap: 8px; margin: 16px 0; }
+  .esc-level { display: flex; align-items: center; gap: 12px; padding: 10px 16px; border-radius: 8px; font-size: 13px; }
+  .esc-badge { font-weight: 700; min-width: 24px; text-align: center; padding: 4px 8px; border-radius: 6px; font-size: 12px; }
+
+  /* Scroll container for large tables */
+  .scroll-x { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .section-title { font-size: 18px; font-weight: 700; margin: 24px 0 12px; padding-bottom: 8px; border-bottom: 1px solid #1e293b; }
+
+  /* Responsive nav */
+  @media (max-width: 768px) {
+    nav { gap: 4px; padding: 10px 12px; }
+    nav button { padding: 6px 10px; font-size: 12px; }
+    .flow-steps { flex-direction: column; align-items: stretch; }
+    .flow-arrow { text-align: center; transform: rotate(90deg); }
+    .raci-table { font-size: 11px; }
+    .tool-cards { grid-template-columns: 1fr; }
+    .cron-cards { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">🐉 <span>Balerion</span> Mission Control</div>
+  <button class="active" onclick="showTab('org')">🏢 Org</button>
+  <button onclick="showTab('dashboard')">📊 Dashboard</button>
+  <button onclick="showTab('vision')">🌍 Vision</button>
+  <button onclick="showTab('xrevenue')">🐦 X Revenue</button>
+  <button onclick="showTab('dragons')">🐉 Drachen</button>
+  <button onclick="showTab('activity')">📜 Chronik</button>
+  <button onclick="showTab('prozesse')">🔄 Prozesse</button>
+  <button onclick="showTab('raci')">🐉 RACI</button>
+  <button onclick="showTab('audit')">🛡️ Audit</button>
+  <button onclick="showTab('tools')">🔧 Tools</button>
+  <button onclick="showTab('cron')">⏰ Cron</button>
+  <button onclick="showTab('dataflow')">📊 Daten</button>
+  <button onclick="showTab('governance')">📋 Regeln</button>
+  <div id="global-last-refresh" style="margin-left:auto;font-size:12px;color:#64748b;"></div>
+</nav>
+
+<!-- ORG CHART -->
+<div id="tab-org" class="tab active">
+  <div id="org-chart-container" class="org-chart"></div>
+</div>
+
+<!-- DASHBOARD -->
+<div id="tab-dashboard" class="tab">
+  <div id="dashboard-container" class="dashboard">
+    <!-- Rendered dynamically by renderDashboard() -->
+  </div>
+</div>
+
+<!-- VISION -->
+<div id="tab-vision" class="tab">
+  <div class="dashboard">
+
+    <div class="panel" style="grid-column: 1 / -1;">
+      <h3>🌍 Die große Vision: Brücke Real ↔ Digital</h3>
+      <div class="bridge-visual">
+        <div class="bridge-side bridge-real">🏘️ Reale Welt<br><small>Gemeinden, Events, Müll, Vereine</small></div>
+        <div class="bridge-arrow">🐉 ⟵══════⟶ 🐉</div>
+        <div class="bridge-side bridge-digital">💻 Digitale Welt<br><small>Apps, Daten, Netzwerke, Services</small></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h3>📐 Breite der Brücke (Was digitalisiert?)</h3>
+      <div style="margin: 8px 0;">
+        <div style="display:flex;justify-content:space-between;font-size:13px;"><span>Events & Veranstaltungen</span><span>✅</span></div>
+        <div class="vision-bar"><div class="vision-fill" style="width:80%">80%</div></div>
+      </div>
+      <div style="margin: 8px 0;">
+        <div style="display:flex;justify-content:space-between;font-size:13px;"><span>Müllabfuhr-Termine</span><span>⏳</span></div>
+        <div class="vision-bar"><div class="vision-fill" style="width:20%">20%</div></div>
+      </div>
+      <div style="margin: 8px 0;">
+        <div style="display:flex;justify-content:space-between;font-size:13px;"><span>Lokale Nachrichten</span><span>⏳</span></div>
+        <div class="vision-bar"><div class="vision-fill" style="width:30%">30%</div></div>
+      </div>
+      <div style="margin: 8px 0;">
+        <div style="display:flex;justify-content:space-between;font-size:13px;"><span>Gebäude & POIs</span><span>🔜</span></div>
+        <div class="vision-bar"><div class="vision-fill" style="width:0%"></div></div>
+      </div>
+      <div style="margin: 8px 0;">
+        <div style="display:flex;justify-content:space-between;font-size:13px;"><span>Vereine & Menschen</span><span>🔜</span></div>
+        <div class="vision-bar"><div class="vision-fill" style="width:0%"></div></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h3>🗺️ Fläche (Wie viel Deutschland?)</h3>
+      <div class="metric">
+        <div class="metric-value" style="color:#ef4444; font-size: 48px;">0.001%</div>
+        <div class="metric-label">von Deutschland abgedeckt</div>
+      </div>
+      <div style="margin: 16px 0;">
+        <div style="display:flex;justify-content:space-between;font-size:13px;"><span>Poxdorf</span><span style="color:#22c55e;">✅ Pilot</span></div>
+        <div style="display:flex;justify-content:space-between;font-size:13px;margin-top:8px;"><span>Pinzberg, Effeltrich, Kunreuth, Wiesenthau</span><span>🔜 Nächstes</span></div>
+        <div style="display:flex;justify-content:space-between;font-size:13px;margin-top:8px;"><span>Landkreis Forchheim</span><span>📋 Plan</span></div>
+        <div style="display:flex;justify-content:space-between;font-size:13px;margin-top:8px;"><span>Oberfranken</span><span>🎯 Ziel 2027</span></div>
+        <div style="display:flex;justify-content:space-between;font-size:13px;margin-top:8px;"><span>Bayern → Deutschland</span><span>🚀 Langfrist</span></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- X REVENUE -->
+<div id="tab-xrevenue" class="tab">
+  <div class="dashboard" id="xrevenue-container">
+  </div>
+</div>
+
+<!-- CHRONIK / LIVE FEED -->
+<div id="tab-activity" class="tab">
+  <div class="panel">
+    <h3>📡 Drachen-Chronik — Live aus Logs</h3>
+    <div style="font-size:12px;color:#64748b;margin-bottom:12px;">Alle Drachen loggen automatisch. Kein manuelles Update nötig.</div>
+    <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;">
+      <button onclick="filterFeed('all')" class="feed-filter active" style="padding:4px 12px;border-radius:16px;border:1px solid #334155;background:#1e293b;color:#94a3b8;cursor:pointer;font-size:12px;">Alle</button>
+      <button onclick="filterFeed('balerion')" class="feed-filter" style="padding:4px 12px;border-radius:16px;border:1px solid #334155;background:#1e293b;color:#94a3b8;cursor:pointer;font-size:12px;">🖤 Balerion</button>
+      <button onclick="filterFeed('caraxes')" class="feed-filter" style="padding:4px 12px;border-radius:16px;border:1px solid #334155;background:#1e293b;color:#94a3b8;cursor:pointer;font-size:12px;">🔴 Caraxes</button>
+      <button onclick="filterFeed('vermithrax')" class="feed-filter" style="padding:4px 12px;border-radius:16px;border:1px solid #334155;background:#1e293b;color:#94a3b8;cursor:pointer;font-size:12px;">🛡️ Vermithrax</button>
+      <button onclick="filterFeed('meleys')" class="feed-filter" style="padding:4px 12px;border-radius:16px;border:1px solid #334155;background:#1e293b;color:#94a3b8;cursor:pointer;font-size:12px;">❤️ Meleys</button>
+      <button onclick="filterFeed('sunfyre')" class="feed-filter" style="padding:4px 12px;border-radius:16px;border:1px solid #334155;background:#1e293b;color:#94a3b8;cursor:pointer;font-size:12px;">✨ Sunfyre</button>
+    </div>
+    <div id="activity-feed" style="max-height:700px;overflow-y:auto;"></div>
+  </div>
+</div>
+
+<div id="tab-dragons" class="tab">
+  <div id="dragons-container" class="dragons-container">
+    <div id="dragons-last-update" style="font-size:12px; color:#64748b; text-align:center; width:100%;">Letztes Update: —</div>
+  </div>
+</div>
+
+<!-- ============ TAB: PROZESSE ============ -->
+<div id="tab-prozesse" class="tab">
+  <h2 style="margin-bottom:20px;">🔄 Workflows & Prozesse</h2>
+
+  <!-- 1. News Discovery Pipeline -->
+  <div class="flow-container">
+    <div class="flow-title">1️⃣ News Discovery & Content Pipeline</div>
+    <div class="flow-steps">
+      <div class="flow-step step-system"><span class="step-who">📡 Quellen</span>Blogwatcher (14 RSS)<br>Grok API<br>Brave Search<span class="step-tool">blogwatcher check</span></div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-step step-meleys"><span class="step-who">❤️ Meleys</span>Learning System Score<span class="step-tool">learner.py --action score</span></div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-step flow-decision"><span class="step-who">⚖️ Gate</span>Score &lt;40 → SKIP<br>Score ≥40 → Bewerten</div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-step flow-decision"><span class="step-who">⚖️ Gate</span>Score ≥7/10?</div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-step step-meleys"><span class="step-who">❤️ Meleys</span>KB Ingest<span class="step-tool">kb.py --action ingest</span></div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-step flow-decision"><span class="step-who">⚖️ Gate</span>Score ≥8/10?</div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-step step-meleys"><span class="step-who">❤️ Meleys</span>Thread Pipeline Dedupe<span class="step-tool">pipeline.py --action check</span></div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-step step-sunfyre"><span class="step-who">✨ Sunfyre</span>Thread schreiben<span class="step-tool">x-thread-creator Skill</span></div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-step step-dino"><span class="step-who">👑 Dino</span>Review & manuell posten<span class="step-tool">x-threads/*.md</span></div>
+    </div>
+  </div>
+
+  <!-- 2. Job Hunting Pipeline -->
+  <div class="flow-container">
+    <div class="flow-title">2️⃣ Job Hunting Pipeline</div>
+    <div class="flow-steps">
+      <div class="flow-step step-caraxes"><span class="step-who">🔴 Caraxes</span>Reddit Scanner<br>+ Blogwatcher<br>+ Brave Search<span class="step-tool">Cron 10:00+16:00</span></div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-step step-meleys"><span class="step-who">❤️ Meleys</span>Learning System<br>Vorfiltern<span class="step-tool">learner.py --action score</span></div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-step flow-decision"><span class="step-who">⚖️ Gate</span>Match ≥7/10?</div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-step step-caraxes"><span class="step-who">🔴 Caraxes</span>Lead Tracker<br>Auto-Score 0-100<span class="step-tool">tracker.py --action add</span></div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-step step-balerion"><span class="step-who">🖤 Balerion</span>DM an Dino<br>Job-Link + Vorschlag<span class="step-tool">Discord DM</span></div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-step step-dino"><span class="step-who">👑 Dino</span>Bewerben/Skip<span class="step-tool">tracker.py --action update</span></div>
+    </div>
+  </div>
+
+  <!-- 3. Development Pipeline -->
+  <div class="flow-container">
+    <div class="flow-title">3️⃣ Development Pipeline (Dragon Dev Loop)</div>
+    <div class="flow-steps">
+      <div class="flow-step step-dino"><span class="step-who">👑 Dino / 🖤 Balerion</span>Anforderung<span class="step-tool">PRD / REQUIREMENTS.md</span></div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-step step-vermithrax"><span class="step-who">🛡️ Vermithrax</span>Tests ZUERST<br>Akzeptanzkriterien<span class="step-tool">vermithrax-qa.md</span></div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-step step-caraxes"><span class="step-who">🔴 Caraxes</span>Implementierung<br>gegen Tests<span class="step-tool">Code + Git</span></div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-step step-vermithrax"><span class="step-who">🛡️ Vermithrax</span>QA Report<br>Compliance-Checkliste<span class="step-tool">15 Pflichtpunkte</span></div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-step flow-decision"><span class="step-who">⚖️ Gate</span>PASS/FAIL?<br><small>Max 3 Loops</small></div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-step step-balerion"><span class="step-who">🖤 Balerion</span>Liefer-Protokoll<br>an Dino<span class="step-tool">Volles QA-Protokoll</span></div>
+    </div>
+    <div style="font-size:12px;color:#64748b;margin-top:8px;padding-left:16px;">❌ FAIL → Zurück zu Caraxes (max 3x, dann Eskalation) &nbsp;|&nbsp; ✅ PASS → Lieferung MIT Traceability-Matrix, Dateipfade, Freigabe</div>
+  </div>
+
+  <!-- 4. Dragon Council -->
+  <div class="flow-container">
+    <div class="flow-title">4️⃣ Nightly Dragon Council (02:00 Berlin)</div>
+    <div class="flow-steps">
+      <div class="flow-step step-system"><span class="step-who">📡 Phase 1</span>Signal Collection<br>activity.jsonl, ai-usage.jsonl<br>HEARTBEAT, Blogwatcher, Email<span class="step-tool">MEMORY.md lesen</span></div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-step step-meleys"><span class="step-who">🔬 Meleys</span>Growth-Perspektive<br>"Wo wachsen?"</div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-step step-vhagar"><span class="step-who">💰 Vhagar</span>Revenue-Perspektive<br>"Kommt Geld rein?"</div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-step step-vermithrax"><span class="step-who">🛡️ Vermithrax</span>Skeptiker-Perspektive<br>"Was kann schiefgehen?"</div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-step step-balerion"><span class="step-who">🖤 Balerion</span>Ops-Perspektive<br>"Laufen alle Systeme?"</div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-step step-system"><span class="step-who">📊 Phase 3</span>Consensus<br>Top 5 Empfehlungen<span class="step-tool">Score = Impact×0.4 + Confidence×0.35 + (10-Effort)×0.25</span></div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-step step-dino"><span class="step-who">👑 Dino</span>DM + Report<span class="step-tool">memory/nacht-review/</span></div>
+    </div>
+  </div>
+
+  <!-- 5. Daily Operations -->
+  <div class="flow-container">
+    <div class="flow-title">5️⃣ Daily Operations — Tagesablauf</div>
+    <div class="ops-timeline">
+      <div class="ops-time-row"><span class="ops-time">02:00</span><span class="ops-desc">🌙 Nightly Dragon Council — 4 Perspektiven, Top 5 Empfehlungen</span><span class="ops-dragon">🖤 Balerion</span></div>
+      <div class="ops-time-row"><span class="ops-time">07:30</span><span class="ops-desc">📚 Daily Learning Sweep — Blogwatcher scan, Top Artikel lesen, Learnings</span><span class="ops-dragon">🖤 Balerion</span></div>
+      <div class="ops-time-row"><span class="ops-time">08:00</span><span class="ops-desc">🔒 Security Audit — openclaw security audit --deep, CVE-Check</span><span class="ops-dragon">🖤 Balerion</span></div>
+      <div class="ops-time-row"><span class="ops-time">09:00</span><span class="ops-desc">🔍 Meleys News Patrol #1 — Blogwatcher + Brave Queries</span><span class="ops-dragon">❤️ Meleys</span></div>
+      <div class="ops-time-row"><span class="ops-time">10:00</span><span class="ops-desc">💼 Reddit Job Scanner #1 — Reddit + Brave → Lead Tracker</span><span class="ops-dragon">🔴 Caraxes</span></div>
+      <div class="ops-time-row"><span class="ops-time">13:00</span><span class="ops-desc">🔍 Meleys News Patrol #2 — Blogwatcher + Grok Query</span><span class="ops-dragon">❤️ Meleys</span></div>
+      <div class="ops-time-row"><span class="ops-time">16:00</span><span class="ops-desc">💼 Reddit Job Scanner #2 — Reddit + Brave → Lead Tracker</span><span class="ops-dragon">🔴 Caraxes</span></div>
+      <div class="ops-time-row"><span class="ops-time">18:00</span><span class="ops-desc">🔍 Meleys News Patrol #3 — Blogwatcher + Brave Queries</span><span class="ops-dragon">❤️ Meleys</span></div>
+      <div class="ops-time-row"><span class="ops-time">22:00</span><span class="ops-desc">🔍 Meleys News Patrol #4 — Blogwatcher + Grok Query</span><span class="ops-dragon">❤️ Meleys</span></div>
+      <div class="ops-time-row"><span class="ops-time">~30m</span><span class="ops-desc">💓 Heartbeats — Reddit Inbox, Email, Mission Control Update, Lead Tracking</span><span class="ops-dragon">🖤 Balerion</span></div>
+    </div>
+  </div>
+
+  <!-- 6. Weekly Operations -->
+  <div class="flow-container">
+    <div class="flow-title">6️⃣ Weekly Operations</div>
+    <div class="ops-timeline">
+      <div class="ops-time-row"><span class="ops-time" style="min-width:80px;">Mo 09:00</span><span class="ops-desc">🐙 GitHub Opportunities Scan — "good first issue", "help wanted"</span><span class="ops-dragon">🖤 Balerion</span></div>
+      <div class="ops-time-row"><span class="ops-time" style="min-width:80px;">Mo 10:00</span><span class="ops-desc">🧰 Weekly Skills & Tools Discovery — Neue AI-Tools recherchieren</span><span class="ops-dragon">🖤 Balerion</span></div>
+      <div class="ops-time-row"><span class="ops-time" style="min-width:80px;">Do 09:00</span><span class="ops-desc">🐙 GitHub Opportunities Scan (2. Run)</span><span class="ops-dragon">🖤 Balerion</span></div>
+      <div class="ops-time-row"><span class="ops-time" style="min-width:80px;">So 20:00</span><span class="ops-desc">🧠 Weekly AI Intelligence Review — Matt Wolfe Video → Strategic Report</span><span class="ops-dragon">❤️ Meleys</span></div>
+    </div>
+  </div>
+
+  <!-- 7. Content Humanization -->
+  <div class="flow-container">
+    <div class="flow-title">7️⃣ Content Humanization Pipeline</div>
+    <div class="flow-steps">
+      <div class="flow-step step-sunfyre"><span class="step-who">✨ Sunfyre</span>Draft erstellen<span class="step-tool">Thread/Post</span></div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-step step-system"><span class="step-who">🔍 AI-Tell Detection</span>Verbotene Wörter: delve, landscape, leverage…<br>Tone Inflation, Generic Phrasing<span class="step-tool">Thread-Template Watchlist</span></div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-step step-sunfyre"><span class="step-who">✨ Sunfyre</span>Rewrite<br>Contractions, Fragments, Filler entfernen</div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-step step-system"><span class="step-who">📱 Channel-Tuning</span>X: 280 chars, N/Y<br>Discord: Bullets, &lt;&gt; Links<br>WhatsApp: Bold/CAPS</div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-step step-dino"><span class="step-who">👑 Dino</span>Copy-Paste & posten<span class="step-tool">x-threads/*.md</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ TAB: RACI ============ -->
+<div id="tab-raci" class="tab">
+  <h2 style="margin-bottom:8px;">🐉 Verantwortlichkeiten — RACI Matrix</h2>
+  <div style="margin-bottom:16px;">
+    <span class="legend-item" style="display:inline-flex;align-items:center;gap:4px;margin-right:16px;font-size:12px;"><span style="display:inline-block;width:24px;text-align:center;padding:2px 4px;border-radius:4px;" class="raci-r">R</span> Responsible (tut es)</span>
+    <span class="legend-item" style="display:inline-flex;align-items:center;gap:4px;margin-right:16px;font-size:12px;"><span style="display:inline-block;width:24px;text-align:center;padding:2px 4px;border-radius:4px;" class="raci-a">A</span> Accountable (verantwortet)</span>
+    <span class="legend-item" style="display:inline-flex;align-items:center;gap:4px;margin-right:16px;font-size:12px;"><span style="display:inline-block;width:24px;text-align:center;padding:2px 4px;border-radius:4px;" class="raci-c">C</span> Consulted</span>
+    <span class="legend-item" style="display:inline-flex;align-items:center;gap:4px;margin-right:16px;font-size:12px;"><span style="display:inline-block;width:24px;text-align:center;padding:2px 4px;border-radius:4px;" class="raci-i">I</span> Informed</span>
+  </div>
+  <div class="scroll-x">
+    <table class="raci-table">
+      <thead>
+        <tr>
+          <th>Prozess</th>
+          <th>🖤 Balerion</th>
+          <th>🔴 Caraxes</th>
+          <th>❤️ Meleys</th>
+          <th>🛡️ Vermithrax</th>
+          <th>✨ Sunfyre</th>
+          <th>💰 Vhagar</th>
+          <th>👑 Dino</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>News Discovery</td><td class="raci-i" title="Informed — prüft Ergebnisse">I</td><td class="raci-none">-</td><td class="raci-r" title="Responsible — führt Patrol durch">R</td><td class="raci-none">-</td><td class="raci-none">-</td><td class="raci-none">-</td><td class="raci-i" title="Informed — erhält DM">I</td></tr>
+        <tr><td>Thread Writing</td><td class="raci-none">-</td><td class="raci-none">-</td><td class="raci-c" title="Consulted — liefert Research">C</td><td class="raci-none">-</td><td class="raci-r" title="Responsible — schreibt Threads">R</td><td class="raci-none">-</td><td class="raci-a" title="Accountable — postet manuell">A</td></tr>
+        <tr><td>Job Hunting</td><td class="raci-a" title="Accountable — koordiniert">A</td><td class="raci-r" title="Responsible — Reddit Scanner">R</td><td class="raci-none">-</td><td class="raci-none">-</td><td class="raci-none">-</td><td class="raci-none">-</td><td class="raci-a" title="Accountable — entscheidet Bewerbung">A</td></tr>
+        <tr><td>Development</td><td class="raci-a" title="Accountable — PRD, Lieferung">A</td><td class="raci-r" title="Responsible — schreibt Code">R</td><td class="raci-none">-</td><td class="raci-c" title="Consulted — definiert Tests">C</td><td class="raci-none">-</td><td class="raci-none">-</td><td class="raci-i" title="Informed — erhält Lieferprotokoll">I</td></tr>
+        <tr><td>QA / Testing</td><td class="raci-a" title="Accountable — prüft QA Report">A</td><td class="raci-c" title="Consulted — fixt Findings">C</td><td class="raci-none">-</td><td class="raci-r" title="Responsible — Tests + QA Report">R</td><td class="raci-none">-</td><td class="raci-none">-</td><td class="raci-i" title="Informed">I</td></tr>
+        <tr><td>Security Audit</td><td class="raci-r" title="Responsible — führt Audit durch">R</td><td class="raci-none">-</td><td class="raci-none">-</td><td class="raci-none">-</td><td class="raci-none">-</td><td class="raci-none">-</td><td class="raci-i" title="Informed — nur bei Findings">I</td></tr>
+        <tr><td>Dragon Council</td><td class="raci-r" title="Responsible — Ops-Perspektive">R</td><td class="raci-none">-</td><td class="raci-c" title="Consulted — Growth-Perspektive">C</td><td class="raci-c" title="Consulted — Skeptiker">C</td><td class="raci-none">-</td><td class="raci-c" title="Consulted — Revenue-Perspektive">C</td><td class="raci-i" title="Informed — Top 5 DM">I</td></tr>
+        <tr><td>System Audit</td><td class="raci-a" title="Accountable">A</td><td class="raci-none">-</td><td class="raci-none">-</td><td class="raci-r" title="Responsible — führt Audit durch">R</td><td class="raci-none">-</td><td class="raci-none">-</td><td class="raci-i" title="Informed">I</td></tr>
+        <tr><td>Cost Tracking</td><td class="raci-r" title="Responsible — Report lesen">R</td><td class="raci-none">-</td><td class="raci-none">-</td><td class="raci-none">-</td><td class="raci-none">-</td><td class="raci-c" title="Consulted — ROI">C</td><td class="raci-i" title="Informed">I</td></tr>
+        <tr><td>Content Humanization</td><td class="raci-none">-</td><td class="raci-none">-</td><td class="raci-none">-</td><td class="raci-none">-</td><td class="raci-r" title="Responsible — Rewrite">R</td><td class="raci-none">-</td><td class="raci-a" title="Accountable — finales Review">A</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ============ TAB: AUDIT ============ -->
+<div id="tab-audit" class="tab">
+  <h2 style="margin-bottom:20px;">🛡️ System Audits — Vermithrax</h2>
+
+  <div class="audit-overview">
+    <div class="audit-stat"><div class="val" style="color:#f59e0b;">⏳</div><div class="lbl">Letzter Audit</div><div style="font-size:11px;color:#64748b;margin-top:4px;">Noch kein Audit durchgeführt</div></div>
+    <div class="audit-stat"><div class="val" style="color:#3b82f6;">100</div><div class="lbl">Assertions Total</div></div>
+    <div class="audit-stat"><div class="val" style="color:#22c55e;">0</div><div class="lbl">Bestanden</div></div>
+    <div class="audit-stat"><div class="val" style="color:#ef4444;">0</div><div class="lbl">Fehlgeschlagen</div></div>
+    <div class="audit-stat"><div class="val" style="color:#94a3b8;">100</div><div class="lbl">Noch nicht getestet</div></div>
+  </div>
+
+  <div class="panel" style="margin-bottom:20px;">
+    <h3>📋 Audit-Typen</h3>
+    <div class="scroll-x">
+      <table class="raci-table">
+        <thead><tr><th>Typ</th><th>Frequenz</th><th>Wer</th><th>Was wird geprüft</th><th>Assertions</th></tr></thead>
+        <tbody>
+          <tr><td>🏥 Health Check</td><td>Täglich 06:00</td><td>🛡️ Vermithrax</td><td>Tools, Datenbanken, Logs</td><td>T-001 bis T-041</td></tr>
+          <tr><td>⚙️ Config Audit</td><td>Wöchentlich Mo</td><td>🛡️ Vermithrax</td><td>Configs, Cron Jobs, API Keys</td><td>T-042 bis T-061</td></tr>
+          <tr><td>🔄 Process Audit</td><td>Wöchentlich Mi</td><td>🛡️ Vermithrax</td><td>Workflows, Skills, Dokumentation</td><td>T-062 bis T-083</td></tr>
+          <tr><td>🔍 Full Audit</td><td>Monatlich 1.</td><td>🛡️ Vermithrax</td><td>Alles (Health + Config + Process + FS + Python)</td><td>T-001 bis T-100</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h3>📝 Alle 100 Assertions</h3>
+    <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
+      <button onclick="filterAssertions('all')" class="feed-filter active" style="padding:4px 12px;border-radius:16px;border:1px solid #334155;background:#1e293b;color:#94a3b8;cursor:pointer;font-size:11px;">Alle (100)</button>
+      <button onclick="filterAssertions('tools')" class="feed-filter" style="padding:4px 12px;border-radius:16px;border:1px solid #334155;background:#1e293b;color:#94a3b8;cursor:pointer;font-size:11px;">🔧 Tools (19)</button>
+      <button onclick="filterAssertions('db')" class="feed-filter" style="padding:4px 12px;border-radius:16px;border:1px solid #334155;background:#1e293b;color:#94a3b8;cursor:pointer;font-size:11px;">🗄️ DB (7)</button>
+      <button onclick="filterAssertions('logs')" class="feed-filter" style="padding:4px 12px;border-radius:16px;border:1px solid #334155;background:#1e293b;color:#94a3b8;cursor:pointer;font-size:11px;">📜 Logs (9)</button>
+      <button onclick="filterAssertions('config')" class="feed-filter" style="padding:4px 12px;border-radius:16px;border:1px solid #334155;background:#1e293b;color:#94a3b8;cursor:pointer;font-size:11px;">⚙️ Config (8)</button>
+      <button onclick="filterAssertions('cron')" class="feed-filter" style="padding:4px 12px;border-radius:16px;border:1px solid #334155;background:#1e293b;color:#94a3b8;cursor:pointer;font-size:11px;">⏰ Cron (11)</button>
+      <button onclick="filterAssertions('docs')" class="feed-filter" style="padding:4px 12px;border-radius:16px;border:1px solid #334155;background:#1e293b;color:#94a3b8;cursor:pointer;font-size:11px;">📄 Docs (18)</button>
+      <button onclick="filterAssertions('workflow')" class="feed-filter" style="padding:4px 12px;border-radius:16px;border:1px solid #334155;background:#1e293b;color:#94a3b8;cursor:pointer;font-size:11px;">🔄 Workflow (8)</button>
+      <button onclick="filterAssertions('fs')" class="feed-filter" style="padding:4px 12px;border-radius:16px;border:1px solid #334155;background:#1e293b;color:#94a3b8;cursor:pointer;font-size:11px;">📁 FS (8)</button>
+      <button onclick="filterAssertions('python')" class="feed-filter" style="padding:4px 12px;border-radius:16px;border:1px solid #334155;background:#1e293b;color:#94a3b8;cursor:pointer;font-size:11px;">🐍 Python (4)</button>
+    </div>
+    <div class="scroll-x" style="max-height:600px;overflow-y:auto;">
+      <table class="assert-table" id="assertions-table">
+        <thead><tr><th>ID</th><th>Beschreibung</th><th>Kategorie</th><th>Status</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ============ TAB: TOOLS ============ -->
+<div id="tab-tools" class="tab">
+  <h2 style="margin-bottom:20px;">🔧 Tools — Übersicht</h2>
+  <div class="tool-cards">
+
+    <div class="tool-card">
+      <h4>📚 Knowledge Base</h4>
+      <div class="tool-path">tools/knowledge-base/kb.py</div>
+      <div class="tool-desc">RAG Knowledge Base — Artikel, Tweets, Notes speichern und semantisch suchen (Gemini Embeddings)</div>
+      <pre>python3 kb.py --action ingest --url URL --tags ai,news
+python3 kb.py --action search --query "AI agents"
+python3 kb.py --action stats
+python3 kb.py --action list --limit 10</pre>
+      <div class="tool-db-info">🗄️ DB: <code>mission-control/knowledge.db</code> (SQLite WAL)<br>Schema: <code>sources</code> (id, url, title, type, tags) → <code>chunks</code> (id, source_id, content, embedding)<br>Chunking: 800 chars, 200 overlap | API: GEMINI_API_KEY</div>
+      <div class="tool-workflows"><strong>Genutzt in:</strong> <span onclick="showTab('prozesse')">News Discovery</span> <span onclick="showTab('prozesse')">Daily Learning Sweep</span> <span onclick="showTab('prozesse')">Dragon Council</span></div>
+    </div>
+
+    <div class="tool-card">
+      <h4>💼 Lead Tracker</h4>
+      <div class="tool-path">tools/lead-tracker/tracker.py | tracker.sh</div>
+      <div class="tool-desc">Job/Proposal Tracking mit automatischem Scoring (0-100). Deduplizierung via URL + Jaccard-Similarity.</div>
+      <pre>python3 tracker.py --action add --source reddit --title "AI Dev" --price 500
+python3 tracker.py --action list --sort score
+python3 tracker.py --action stats
+python3 tracker.py --action update --id 1 --status applied</pre>
+      <div class="tool-db-info">🗄️ DB: <code>mission-control/leads.db</code> (SQLite WAL)<br>Schema: <code>leads</code> (id, source, title, company, price, score, status) → <code>status_history</code><br>Auto-Score: AI/automation +10, >$1000 +15, upwork +10</div>
+      <div class="tool-workflows"><strong>Genutzt in:</strong> <span onclick="showTab('prozesse')">Job Hunting</span> <span onclick="showTab('prozesse')">Dragon Council</span></div>
+    </div>
+
+    <div class="tool-card">
+      <h4>🧵 Thread Pipeline</h4>
+      <div class="tool-path">tools/thread-pipeline/pipeline.py</div>
+      <div class="tool-desc">Status-Tracking & Deduplizierung für X/Twitter Threads. Jaccard-Similarity Dedupe (70% Title + 30% Keywords).</div>
+      <pre>python3 pipeline.py --action check --title "AI Thread"
+python3 pipeline.py --action register --file x-threads/post.md --title "AI"
+python3 pipeline.py --action stats
+python3 pipeline.py --action scan</pre>
+      <div class="tool-db-info">🗄️ DB: <code>mission-control/threads.db</code> (SQLite WAL)<br>Schema: <code>threads</code> (id, file_path, title, tags, status, keywords)<br>Status: pitched → accepted → produced → posted | Dedupe Threshold: >0.4</div>
+      <div class="tool-workflows"><strong>Genutzt in:</strong> <span onclick="showTab('prozesse')">News Discovery</span> <span onclick="showTab('prozesse')">Content Humanization</span></div>
+    </div>
+
+    <div class="tool-card">
+      <h4>🧠 Learning System</h4>
+      <div class="tool-path">tools/learning-system/learner.py</div>
+      <div class="tool-desc">Selbstlernendes Content-Filter. Scored Artikel 0-100, auto-skips Domains nach 3x irrelevantem Feedback.</div>
+      <pre>python3 learner.py --action score --title "AI funding round"
+python3 learner.py --action learn --type prefer_keyword --value "Claude"
+python3 learner.py --action feedback --url URL --relevant false
+python3 learner.py --action stats</pre>
+      <div class="tool-db-info">⚙️ Config: <code>tools/learning-system/config.json</code><br>📜 Log: <code>learning-log.jsonl</code><br>Score <40 → skip | Prefer: AI, LLM, Claude, automation… | Auto-learn: 3x irrelevant → skip domain</div>
+      <div class="tool-workflows"><strong>Genutzt in:</strong> <span onclick="showTab('prozesse')">News Discovery</span> <span onclick="showTab('prozesse')">Job Hunting</span></div>
+    </div>
+
+    <div class="tool-card">
+      <h4>✅ Content Validator</h4>
+      <div class="tool-path">tools/content-validator/validate.py</div>
+      <div class="tool-desc">Prüft extrahierten Content auf Qualität. Error-Page-Detection, Mindestlänge, Prose-Ratio, Boilerplate.</div>
+      <pre>python3 validate.py --text "..." --type article
+echo "..." | python3 validate.py --type article
+# Output: {"valid": bool, "score": int, "issues": [...]}</pre>
+      <div class="tool-db-info">Checks: Error-Page (403, Captcha, Cloudflare), Mindestlänge (article:500, tweet:20, note:10), Encoding, Prose-Ratio, Boilerplate, Duplikat-Paragraphen<br>Valid = score ≥50 AND keine Error-Page</div>
+      <div class="tool-workflows"><strong>Genutzt in:</strong> <span onclick="showTab('prozesse')">News Discovery</span></div>
+    </div>
+
+    <div class="tool-card">
+      <h4>💰 Cost Tracker</h4>
+      <div class="tool-path">tools/cost-tracker/report.py | log_usage.py | report.sh</div>
+      <div class="tool-desc">AI-Kosten tracken & reporten. Pricing pro Model, Weekly Trends, Spend Warnings bei >25% Konzentration.</div>
+      <pre>python3 report.py --days 7
+python3 report.py --weekly
+python3 log_usage.py claude-opus-4-6 1000 500 research "News patrol"
+bash report.sh</pre>
+      <div class="tool-db-info">📜 Log: <code>mission-control/logs/ai-usage.jsonl</code><br>⚙️ Pricing: <code>pricing.json</code> (7 Models)<br>Claude Opus: $15/$75 | Grok: $2/$10 | Gemini Flash: $0.30/$1.20</div>
+      <div class="tool-workflows"><strong>Genutzt in:</strong> <span onclick="showTab('prozesse')">Dragon Council</span> <span onclick="showTab('prozesse')">Daily Ops</span></div>
+    </div>
+
+    <div class="tool-card">
+      <h4>🔍 Tiered Research</h4>
+      <div class="tool-path">tools/tiered-research/research.py</div>
+      <div class="tool-desc">Kaskadierende Social-Media-Recherche. Billigste Quelle zuerst: FxTwitter (kostenlos) → Grok ($0.003) → Brave ($0.005).</div>
+      <pre>python3 research.py "OpenAI news" --mode auto
+python3 research.py "https://x.com/..." --mode tweet --json</pre>
+      <div class="tool-db-info">📜 Log: <code>mission-control/logs/research-usage.jsonl</code><br>🗂️ Cache: <code>tools/tiered-research/cache/</code> (1h TTL, SHA256-Key)<br>Features: Query Decomposition, Result Merging, Engagement Ranking</div>
+      <div class="tool-workflows"><strong>Genutzt in:</strong> <span onclick="showTab('prozesse')">News Discovery</span> <span onclick="showTab('prozesse')">Job Hunting</span></div>
+    </div>
+
+    <div class="tool-card">
+      <h4>📡 Blogwatcher</h4>
+      <div class="tool-path">blogwatcher (CLI)</div>
+      <div class="tool-desc">RSS Feed Monitor — 14 Feeds (AI, Tech, Security). Externe CLI, kein Python.</div>
+      <pre>blogwatcher check --new-only
+blogwatcher scan
+blogwatcher articles</pre>
+      <div class="tool-db-info">14 RSS Feeds: OpenAI, Anthropic, Google AI, TechCrunch, Ars Technica, Cisco AI Security, CrowdStrike, OpenClaw Releases, etc.</div>
+      <div class="tool-workflows"><strong>Genutzt in:</strong> <span onclick="showTab('prozesse')">News Discovery</span> <span onclick="showTab('prozesse')">Daily Learning Sweep</span> <span onclick="showTab('prozesse')">Dragon Council</span></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ============ TAB: CRON ============ -->
+<div id="tab-cron" class="tab">
+  <h2 style="margin-bottom:20px;">⏰ Cron Jobs — Automatisierungen</h2>
+  <div class="cron-cards">
+
+    <div class="cron-card">
+      <h4>❤️ Meleys News Patrol</h4>
+      <div class="cron-schedule">0 9,13,18,22 * * * (Europe/Berlin)</div>
+      <div class="cron-detail"><strong>Frequenz:</strong> 4x täglich | <strong>ID:</strong> b39d6dad | <strong>Timeout:</strong> 360s</div>
+      <div class="cron-detail"><strong>Model:</strong> Claude Opus 4.6 | <strong>Target:</strong> isolated (Docker)</div>
+      <div class="cron-detail"><strong>Tools:</strong> Blogwatcher, Learning System, KB, Thread Pipeline, Grok, Brave</div>
+      <div class="cron-detail"><strong>Delivery:</strong> Discord DM an Dino</div>
+    </div>
+
+    <div class="cron-card">
+      <h4>🔴 Reddit Job Scanner</h4>
+      <div class="cron-schedule">0 10,16 * * * (Europe/Berlin)</div>
+      <div class="cron-detail"><strong>Frequenz:</strong> 2x täglich | <strong>ID:</strong> 16a7e88a | <strong>Timeout:</strong> 180s</div>
+      <div class="cron-detail"><strong>Model:</strong> Claude Opus 4.6 | <strong>Target:</strong> isolated</div>
+      <div class="cron-detail"><strong>Tools:</strong> Blogwatcher, Brave Search, Learning System, Lead Tracker</div>
+      <div class="cron-detail"><strong>Delivery:</strong> Discord DM an Dino</div>
+    </div>
+
+    <div class="cron-card">
+      <h4>🌙 Nightly Dragon Council</h4>
+      <div class="cron-schedule">0 2 * * * (Europe/Berlin)</div>
+      <div class="cron-detail"><strong>Frequenz:</strong> Täglich 02:00 | <strong>ID:</strong> 60cf6592 | <strong>Timeout:</strong> 900s</div>
+      <div class="cron-detail"><strong>Model:</strong> Claude Opus 4.6 | <strong>Target:</strong> isolated</div>
+      <div class="cron-detail"><strong>4 Perspektiven:</strong> Meleys (Growth), Vhagar (Revenue), Vermithrax (Skeptic), Balerion (Ops)</div>
+      <div class="cron-detail"><strong>Delivery:</strong> Discord DM — Top 5 Empfehlungen</div>
+    </div>
+
+    <div class="cron-card">
+      <h4>📚 Daily Learning Sweep</h4>
+      <div class="cron-schedule">30 7 * * * (Europe/Berlin)</div>
+      <div class="cron-detail"><strong>Frequenz:</strong> Täglich 07:30 | <strong>ID:</strong> b3f7034a</div>
+      <div class="cron-detail"><strong>Model:</strong> Claude Opus 4.6 | <strong>Target:</strong> isolated</div>
+      <div class="cron-detail"><strong>Tools:</strong> Blogwatcher, web_fetch</div>
+      <div class="cron-detail"><strong>Delivery:</strong> none (DM nur bei wichtigen Funden)</div>
+    </div>
+
+    <div class="cron-card">
+      <h4>🔒 Security Audit</h4>
+      <div class="cron-schedule">0 8 * * * (Europe/Berlin)</div>
+      <div class="cron-detail"><strong>Frequenz:</strong> Täglich 08:00 | <strong>ID:</strong> eaf9b461 | <strong>Timeout:</strong> 180s</div>
+      <div class="cron-detail"><strong>Model:</strong> Claude Opus 4.6 | <strong>Target:</strong> isolated</div>
+      <div class="cron-detail"><strong>Prüft:</strong> openclaw security audit --deep, CVE, GitHub Advisories</div>
+      <div class="cron-detail"><strong>Delivery:</strong> Discord DM nur bei Findings</div>
+    </div>
+
+    <div class="cron-card">
+      <h4>🧠 Weekly AI Intelligence Review</h4>
+      <div class="cron-schedule">0 20 * * 0 (Europe/Berlin)</div>
+      <div class="cron-detail"><strong>Frequenz:</strong> Sonntag 20:00 | <strong>ID:</strong> f1a2a08f | <strong>Timeout:</strong> 600s</div>
+      <div class="cron-detail"><strong>Model:</strong> Claude Opus 4.6 | <strong>Target:</strong> isolated</div>
+      <div class="cron-detail"><strong>Was:</strong> Matt Wolfe Video → Strategische Bewertung → Report</div>
+    </div>
+
+    <div class="cron-card">
+      <h4>🐙 GitHub Opportunities Scan</h4>
+      <div class="cron-schedule">0 9 * * 1,4 (Europe/Berlin)</div>
+      <div class="cron-detail"><strong>Frequenz:</strong> Mo+Do 09:00 | <strong>ID:</strong> d39a0031 | <strong>Timeout:</strong> 180s</div>
+      <div class="cron-detail"><strong>Model:</strong> Claude Opus 4.6 | <strong>Target:</strong> isolated</div>
+      <div class="cron-detail"><strong>Was:</strong> "good first issue", "help wanted" → Open-Source Sichtbarkeit</div>
+    </div>
+
+    <div class="cron-card">
+      <h4>🧰 Weekly Skills & Tools Discovery</h4>
+      <div class="cron-schedule">0 10 * * 1 (Europe/Berlin)</div>
+      <div class="cron-detail"><strong>Frequenz:</strong> Montag 10:00 | <strong>ID:</strong> 260107da | <strong>Timeout:</strong> 120s</div>
+      <div class="cron-detail"><strong>Model:</strong> Claude Opus 4.6 | <strong>Target:</strong> isolated</div>
+      <div class="cron-detail"><strong>Was:</strong> Neue AI-Tools, Skills, Workflows entdecken + bewerten</div>
+    </div>
+
+    <div class="cron-card" style="border-color:rgba(245,158,11,0.4);">
+      <h4>⚠️ Anthropic Max Plan Erinnerung</h4>
+      <div class="cron-schedule">at 2026-03-09 07:00Z (einmalig)</div>
+      <div class="cron-detail"><strong>ID:</strong> 68a649d5 | <strong>Model:</strong> Claude Sonnet 4.5</div>
+      <div class="cron-detail"><strong>Was:</strong> Erinnerung: Max Plan läuft aus → auf kleinen Plan wechseln</div>
+    </div>
+
+    <div class="cron-card" style="border-color:rgba(245,158,11,0.4);">
+      <h4>📊 Brave Search ROI Review</h4>
+      <div class="cron-schedule">at 2026-03-10 08:00Z (einmalig)</div>
+      <div class="cron-detail"><strong>ID:</strong> b8c5a45d | <strong>Model:</strong> Claude Sonnet 4.5 | <strong>Timeout:</strong> 300s</div>
+      <div class="cron-detail"><strong>Was:</strong> ROI-Review nach 1 Monat Brave Search Base Plan</div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h3>📊 Tages-Timeline (wann läuft was?)</h3>
+    <div style="position:relative;margin-top:16px;">
+      <div style="display:flex;justify-content:space-between;font-size:10px;color:#475569;margin-bottom:4px;">
+        <span>00:00</span><span>03:00</span><span>06:00</span><span>09:00</span><span>12:00</span><span>15:00</span><span>18:00</span><span>21:00</span><span>24:00</span>
+      </div>
+      <!-- Timeline bars -->
+      <div style="position:relative;height:240px;background:#0a0e1a;border-radius:8px;border:1px solid #1e293b;">
+        <!-- Grid lines -->
+        <div style="position:absolute;top:0;bottom:0;left:12.5%;width:1px;background:#1e293b;"></div>
+        <div style="position:absolute;top:0;bottom:0;left:25%;width:1px;background:#1e293b;"></div>
+        <div style="position:absolute;top:0;bottom:0;left:37.5%;width:1px;background:#1e293b;"></div>
+        <div style="position:absolute;top:0;bottom:0;left:50%;width:1px;background:#1e293b;"></div>
+        <div style="position:absolute;top:0;bottom:0;left:62.5%;width:1px;background:#1e293b;"></div>
+        <div style="position:absolute;top:0;bottom:0;left:75%;width:1px;background:#1e293b;"></div>
+        <div style="position:absolute;top:0;bottom:0;left:87.5%;width:1px;background:#1e293b;"></div>
+        <!-- Dragon Council 02:00 -->
+        <div style="position:absolute;top:8px;left:8.3%;width:6.25%;height:22px;background:rgba(100,116,139,0.6);border-radius:4px;font-size:9px;display:flex;align-items:center;justify-content:center;color:#e2e8f0;" title="Nightly Dragon Council 02:00-03:00">🌙 Council</div>
+        <!-- Learning Sweep 07:30 -->
+        <div style="position:absolute;top:36px;left:31.25%;width:3%;height:22px;background:rgba(59,130,246,0.6);border-radius:4px;font-size:9px;display:flex;align-items:center;justify-content:center;color:#e2e8f0;" title="Daily Learning Sweep 07:30">📚</div>
+        <!-- Security 08:00 -->
+        <div style="position:absolute;top:64px;left:33.3%;width:2%;height:22px;background:rgba(239,68,68,0.6);border-radius:4px;font-size:9px;display:flex;align-items:center;justify-content:center;color:#e2e8f0;" title="Security Audit 08:00">🔒</div>
+        <!-- Meleys Patrol 09,13,18,22 -->
+        <div style="position:absolute;top:92px;left:37.5%;width:2.5%;height:22px;background:rgba(244,63,94,0.6);border-radius:4px;font-size:9px;display:flex;align-items:center;justify-content:center;color:#e2e8f0;" title="Meleys Patrol 09:00">❤️ 09</div>
+        <div style="position:absolute;top:92px;left:54.2%;width:2.5%;height:22px;background:rgba(244,63,94,0.6);border-radius:4px;font-size:9px;display:flex;align-items:center;justify-content:center;color:#e2e8f0;" title="Meleys Patrol 13:00">❤️ 13</div>
+        <div style="position:absolute;top:92px;left:75%;width:2.5%;height:22px;background:rgba(244,63,94,0.6);border-radius:4px;font-size:9px;display:flex;align-items:center;justify-content:center;color:#e2e8f0;" title="Meleys Patrol 18:00">❤️ 18</div>
+        <div style="position:absolute;top:92px;left:91.7%;width:2.5%;height:22px;background:rgba(244,63,94,0.6);border-radius:4px;font-size:9px;display:flex;align-items:center;justify-content:center;color:#e2e8f0;" title="Meleys Patrol 22:00">❤️ 22</div>
+        <!-- Reddit Scanner 10,16 -->
+        <div style="position:absolute;top:120px;left:41.7%;width:2.5%;height:22px;background:rgba(239,68,68,0.6);border-radius:4px;font-size:9px;display:flex;align-items:center;justify-content:center;color:#e2e8f0;" title="Reddit Scanner 10:00">🔴 10</div>
+        <div style="position:absolute;top:120px;left:66.7%;width:2.5%;height:22px;background:rgba(239,68,68,0.6);border-radius:4px;font-size:9px;display:flex;align-items:center;justify-content:center;color:#e2e8f0;" title="Reddit Scanner 16:00">🔴 16</div>
+        <!-- GitHub Mo+Do 09:00 -->
+        <div style="position:absolute;top:148px;left:37.5%;width:2.5%;height:22px;background:rgba(168,85,247,0.4);border-radius:4px;font-size:9px;display:flex;align-items:center;justify-content:center;color:#e2e8f0;border:1px dashed rgba(168,85,247,0.6);" title="GitHub Scan Mo+Do 09:00">🐙 Mo/Do</div>
+        <!-- Skills Mo 10:00 -->
+        <div style="position:absolute;top:176px;left:41.7%;width:2.5%;height:22px;background:rgba(34,197,94,0.4);border-radius:4px;font-size:9px;display:flex;align-items:center;justify-content:center;color:#e2e8f0;border:1px dashed rgba(34,197,94,0.6);" title="Skills Discovery Mo 10:00">🧰 Mo</div>
+        <!-- Weekly Review So 20:00 -->
+        <div style="position:absolute;top:204px;left:83.3%;width:4%;height:22px;background:rgba(234,179,8,0.4);border-radius:4px;font-size:9px;display:flex;align-items:center;justify-content:center;color:#e2e8f0;border:1px dashed rgba(234,179,8,0.6);" title="Weekly AI Review So 20:00">🧠 So</div>
+      </div>
+      <div style="display:flex;gap:12px;margin-top:8px;flex-wrap:wrap;font-size:11px;color:#94a3b8;">
+        <span>█ = Täglich</span> <span style="border:1px dashed #64748b;padding:0 4px;">▪ = Wöchentlich</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ TAB: DATENFLÜSSE ============ -->
+<div id="tab-dataflow" class="tab">
+  <h2 style="margin-bottom:20px;">📊 Datenflüsse & Architektur</h2>
+
+  <!-- SHARED CONTEXT SYSTEM -->
+  <div class="panel" style="margin-bottom:20px;">
+    <h3>🐉 Dragon Data Sharing — Shared Context System</h3>
+    <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap:12px; margin-top:12px;">
+      <div style="background:#1a2a3a; border:1px solid #334155; border-radius:8px; padding:12px;">
+        <div style="font-weight:bold; color:#ffd700; margin-bottom:6px;">📋 shared-context.md</div>
+        <div style="font-size:0.8em; color:#aaa;">Declassified MEMORY — Regeln, Präferenzen, Setup</div>
+        <div style="font-size:0.75em; margin-top:6px;">✍️ <span style="color:#fca5a5;">Balerion</span> · 👁️ <span style="color:#93c5fd;">Alle Drachen</span></div>
+      </div>
+      <div style="background:#1a2a3a; border:1px solid #334155; border-radius:8px; padding:12px;">
+        <div style="font-weight:bold; color:#ffd700; margin-bottom:6px;">📢 shared-briefing.md</div>
+        <div style="font-size:0.8em; color:#aaa;">Tägliche Prioritäten, Änderungen, Projekte</div>
+        <div style="font-size:0.75em; margin-top:6px;">✍️ <span style="color:#fca5a5;">Balerion (täglich)</span> · 👁️ <span style="color:#93c5fd;">Alle Drachen</span></div>
+      </div>
+      <div style="background:#1a2a3a; border:1px solid #334155; border-radius:8px; padding:12px;">
+        <div style="font-weight:bold; color:#ffd700; margin-bottom:6px;">📚 learnings-log.md</div>
+        <div style="font-size:0.8em; color:#aaa;">Langzeit-Erkenntnisse aller Drachen (versioniert)</div>
+        <div style="font-size:0.75em; margin-top:6px;">✍️ <span style="color:#fca5a5;">Alle Drachen</span> · 🔄 <span style="color:#a78bfa;">Balerion kuratiert → MEMORY</span></div>
+      </div>
+      <div style="background:#1a2a3a; border:1px solid #334155; border-radius:8px; padding:12px;">
+        <div style="font-weight:bold; color:#ffd700; margin-bottom:6px;">🧠 MEMORY.md</div>
+        <div style="font-size:0.8em; color:#aaa;">Langzeit-Gedächtnis (kuratiert, geschützt)</div>
+        <div style="font-size:0.75em; margin-top:6px;">✍️👁️ <span style="color:#fca5a5;">Nur Balerion</span> (Main Session, Sicherheit)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SELF-IMPROVEMENT LOOP -->
+  <div class="panel" style="margin-bottom:20px;">
+    <h3>🔄 Self-Improvement Loop</h3>
+    <div style="display:flex; flex-wrap:wrap; justify-content:center; align-items:center; gap:8px; margin-top:12px; padding:16px; background:#0a0e1a; border:2px solid #ffd700; border-radius:12px;">
+      <div style="background:#1e293b; border:1px solid #444; border-radius:8px; padding:8px 14px; font-size:0.85em; text-align:center;">
+        <span style="color:#ffd700; font-weight:bold;">1.</span> Drache arbeitet<br><small style="color:#888;">Recherche, Code, Content</small>
+      </div>
+      <span style="color:#ffd700; font-size:1.3em;">→</span>
+      <div style="background:#1e293b; border:1px solid #444; border-radius:8px; padding:8px 14px; font-size:0.85em; text-align:center;">
+        <span style="color:#ffd700; font-weight:bold;">2.</span> Erkenntnis<br><small style="color:#888;">Neues Tool, Fehler, Info</small>
+      </div>
+      <span style="color:#ffd700; font-size:1.3em;">→</span>
+      <div style="background:#1e293b; border:1px solid #444; border-radius:8px; padding:8px 14px; font-size:0.85em; text-align:center;">
+        <span style="color:#ffd700; font-weight:bold;">3.</span> Learnings Log<br><small style="color:#888;">learnings-log.md</small>
+      </div>
+      <span style="color:#ffd700; font-size:1.3em;">→</span>
+      <div style="background:#1e293b; border:1px solid #444; border-radius:8px; padding:8px 14px; font-size:0.85em; text-align:center;">
+        <span style="color:#ffd700; font-weight:bold;">4.</span> Balerion kuratiert<br><small style="color:#888;">→ MEMORY.md</small>
+      </div>
+      <span style="color:#ffd700; font-size:1.3em;">→</span>
+      <div style="background:#1e293b; border:1px solid #444; border-radius:8px; padding:8px 14px; font-size:0.85em; text-align:center;">
+        <span style="color:#ffd700; font-weight:bold;">5.</span> Shared Context<br><small style="color:#888;">shared-context.md</small>
+      </div>
+      <span style="color:#ffd700; font-size:1.3em;">→</span>
+      <div style="background:#1e293b; border:1px solid #444; border-radius:8px; padding:8px 14px; font-size:0.85em; text-align:center;">
+        <span style="color:#ffd700; font-weight:bold;">6.</span> Alle lernen<br><small style="color:#888;">Nächster Run</small>
+      </div>
+      <span style="color:#4ade80; font-size:1.5em; font-weight:bold;">↻</span>
+    </div>
+    <p style="text-align:center; margin-top:10px; color:#888; font-size:0.8em;">
+      ↑ Von unten nach oben (Drachen → Learnings → Balerion → MEMORY) · ↓ Von oben nach unten (MEMORY → Shared Context → alle Drachen)
+    </p>
+  </div>
+
+  <!-- VERTICAL & HORIZONTAL FLOWS -->
+  <div class="panel" style="margin-bottom:20px;">
+    <h3>↕️ Vertikaler & ↔️ Horizontaler Datenfluss</h3>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:12px;">
+      <div style="background:#1a1a2e; border:1px solid #ffd700; border-radius:8px; padding:14px;">
+        <div style="font-weight:bold; color:#ffd700; margin-bottom:8px;">↕️ Vertikal (Hierarchie)</div>
+        <div style="font-size:0.85em; line-height:1.8;">
+          ⬇️ Dino → Balerion: Discord Chat<br>
+          ⬇️ Balerion → Drachen: shared-briefing, Cron-Prompts<br>
+          ⬆️ Drachen → Balerion: activity.jsonl, learnings-log<br>
+          ⬆️ Balerion → Dino: Discord DM, Protokolle
+        </div>
+      </div>
+      <div style="background:#1a1a2e; border:1px solid #00d4ff; border-radius:8px; padding:14px;">
+        <div style="font-weight:bold; color:#00d4ff; margin-bottom:8px;">↔️ Horizontal (Peer-to-Peer)</div>
+        <div style="font-size:0.85em; line-height:1.8;">
+          Syrax → Caraxes: PRDs, Design-Specs<br>
+          Syrax → Vermithrax: Test-Spezifikationen<br>
+          Caraxes → Vermithrax: Code zum Testen<br>
+          Meleys → Sunfyre: Research für Content<br>
+          Alle ↔ Alle: shared-briefing, learnings-log
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DRAGON ACCESS MATRIX -->
+  <div class="panel" style="margin-bottom:20px;">
+    <h3>🔐 Zugriffs-Matrix — Wer liest/schreibt was?</h3>
+    <div style="overflow-x:auto; margin-top:12px;">
+      <table style="width:100%; border-collapse:collapse; font-size:0.8em;">
+        <tr style="background:#1e293b;">
+          <th style="padding:8px; text-align:left; border:1px solid #334155;">Datenspeicher</th>
+          <th style="padding:8px; text-align:center; border:1px solid #334155;">🖤 Balerion</th>
+          <th style="padding:8px; text-align:center; border:1px solid #334155;">💰 Vhagar</th>
+          <th style="padding:8px; text-align:center; border:1px solid #334155;">🛡️ Vermithrax</th>
+          <th style="padding:8px; text-align:center; border:1px solid #334155;">🩵 Syrax</th>
+          <th style="padding:8px; text-align:center; border:1px solid #334155;">🔴 Caraxes</th>
+          <th style="padding:8px; text-align:center; border:1px solid #334155;">❤️ Meleys</th>
+          <th style="padding:8px; text-align:center; border:1px solid #334155;">✨ Sunfyre</th>
+        </tr>
+        <tr><td style="padding:6px; border:1px solid #334155;">MEMORY.md</td><td style="text-align:center; border:1px solid #334155; background:#1a2a1a;">R/W</td><td style="text-align:center; border:1px solid #334155;">—</td><td style="text-align:center; border:1px solid #334155;">—</td><td style="text-align:center; border:1px solid #334155;">—</td><td style="text-align:center; border:1px solid #334155;">—</td><td style="text-align:center; border:1px solid #334155;">—</td><td style="text-align:center; border:1px solid #334155;">—</td></tr>
+        <tr><td style="padding:6px; border:1px solid #334155;">shared-context.md</td><td style="text-align:center; border:1px solid #334155; background:#3a1a1a;">W</td><td style="text-align:center; border:1px solid #334155; background:#1a2a1a;">R</td><td style="text-align:center; border:1px solid #334155; background:#1a2a1a;">R</td><td style="text-align:center; border:1px solid #334155; background:#1a2a1a;">R</td><td style="text-align:center; border:1px solid #334155; background:#1a2a1a;">R</td><td style="text-align:center; border:1px solid #334155; background:#1a2a1a;">R</td><td style="text-align:center; border:1px solid #334155; background:#1a2a1a;">R</td></tr>
+        <tr><td style="padding:6px; border:1px solid #334155;">shared-briefing.md</td><td style="text-align:center; border:1px solid #334155; background:#3a1a1a;">W</td><td style="text-align:center; border:1px solid #334155; background:#1a2a1a;">R</td><td style="text-align:center; border:1px solid #334155; background:#1a2a1a;">R</td><td style="text-align:center; border:1px solid #334155; background:#1a2a1a;">R</td><td style="text-align:center; border:1px solid #334155; background:#1a2a1a;">R</td><td style="text-align:center; border:1px solid #334155; background:#1a2a1a;">R</td><td style="text-align:center; border:1px solid #334155; background:#1a2a1a;">R</td></tr>
+        <tr><td style="padding:6px; border:1px solid #334155;">learnings-log.md</td><td style="text-align:center; border:1px solid #334155; background:#1a2a1a;">R/W</td><td style="text-align:center; border:1px solid #334155; background:#3a1a1a;">W</td><td style="text-align:center; border:1px solid #334155; background:#3a1a1a;">W</td><td style="text-align:center; border:1px solid #334155; background:#3a1a1a;">W</td><td style="text-align:center; border:1px solid #334155; background:#3a1a1a;">W</td><td style="text-align:center; border:1px solid #334155; background:#3a1a1a;">W</td><td style="text-align:center; border:1px solid #334155; background:#3a1a1a;">W</td></tr>
+        <tr><td style="padding:6px; border:1px solid #334155;">activity.jsonl</td><td style="text-align:center; border:1px solid #334155; background:#1a2a1a;">R</td><td style="text-align:center; border:1px solid #334155; background:#3a1a1a;">W</td><td style="text-align:center; border:1px solid #334155; background:#3a1a1a;">W</td><td style="text-align:center; border:1px solid #334155; background:#3a1a1a;">W</td><td style="text-align:center; border:1px solid #334155; background:#3a1a1a;">W</td><td style="text-align:center; border:1px solid #334155; background:#3a1a1a;">W</td><td style="text-align:center; border:1px solid #334155; background:#3a1a1a;">W</td></tr>
+        <tr><td style="padding:6px; border:1px solid #334155;">data.json</td><td style="text-align:center; border:1px solid #334155; background:#1a2a1a;">R/W</td><td style="text-align:center; border:1px solid #334155; background:#1a2a1a;">R</td><td style="text-align:center; border:1px solid #334155;">—</td><td style="text-align:center; border:1px solid #334155;">—</td><td style="text-align:center; border:1px solid #334155;">—</td><td style="text-align:center; border:1px solid #334155; background:#1a2a1a;">R</td><td style="text-align:center; border:1px solid #334155;">—</td></tr>
+        <tr><td style="padding:6px; border:1px solid #334155;">secrets/</td><td style="text-align:center; border:1px solid #334155; background:#1a2a1a;">R/W</td><td style="text-align:center; border:1px solid #334155;">—</td><td style="text-align:center; border:1px solid #334155;">—</td><td style="text-align:center; border:1px solid #334155;">—</td><td style="text-align:center; border:1px solid #334155;">—</td><td style="text-align:center; border:1px solid #334155;">—</td><td style="text-align:center; border:1px solid #334155;">—</td></tr>
+      </table>
+    </div>
+    <div style="display:flex; gap:16px; margin-top:8px; font-size:0.75em; color:#888;">
+      <span><span style="display:inline-block; width:10px; height:10px; background:#1a2a1a; border-radius:2px;"></span> READ / R/W</span>
+      <span><span style="display:inline-block; width:10px; height:10px; background:#3a1a1a; border-radius:2px;"></span> WRITE</span>
+      <span>— = Kein Zugriff</span>
+    </div>
+  </div>
+
+  <div class="panel" style="margin-bottom:20px;">
+    <h3>🗄️ SQLite Datenbanken</h3>
+    <div class="dataflow">
+      <div class="df-node df-db">
+        <div class="df-icon">🗄️</div>
+        <div class="df-name">knowledge.db</div>
+        <div class="df-path">mission-control/</div>
+        <div class="df-rw">✍️ <span style="color:#fda4af;">kb.py ingest</span><br>👁️ <span style="color:#93c5fd;">kb.py search/list/stats</span></div>
+      </div>
+      <div class="df-node df-db">
+        <div class="df-icon">🗄️</div>
+        <div class="df-name">leads.db</div>
+        <div class="df-path">mission-control/</div>
+        <div class="df-rw">✍️ <span style="color:#fca5a5;">tracker.py add</span><br>👁️ <span style="color:#93c5fd;">tracker.py list/stats</span></div>
+      </div>
+      <div class="df-node df-db">
+        <div class="df-icon">🗄️</div>
+        <div class="df-name">threads.db</div>
+        <div class="df-path">mission-control/</div>
+        <div class="df-rw">✍️ <span style="color:#fda4af;">pipeline.py register</span><br>👁️ <span style="color:#93c5fd;">pipeline.py check/list</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel" style="margin-bottom:20px;">
+    <h3>📜 JSONL Log-Dateien (append-only)</h3>
+    <div class="dataflow">
+      <div class="df-node df-log">
+        <div class="df-icon">📜</div>
+        <div class="df-name">activity.jsonl</div>
+        <div class="df-path">logs/</div>
+        <div class="df-rw">✍️ <span style="color:#fca5a5;">Alle Drachen</span><br>👁️ <span style="color:#93c5fd;">Dashboard, Council</span></div>
+      </div>
+      <div class="df-node df-log">
+        <div class="df-icon">📜</div>
+        <div class="df-name">dragon-status.jsonl</div>
+        <div class="df-path">logs/</div>
+        <div class="df-rw">✍️ <span style="color:#fca5a5;">Alle Drachen</span><br>👁️ <span style="color:#93c5fd;">Dashboard</span></div>
+      </div>
+      <div class="df-node df-log">
+        <div class="df-icon">📜</div>
+        <div class="df-name">ai-usage.jsonl</div>
+        <div class="df-path">logs/</div>
+        <div class="df-rw">✍️ <span style="color:#fca5a5;">log_usage.py</span><br>👁️ <span style="color:#93c5fd;">report.py, Council</span></div>
+      </div>
+      <div class="df-node df-log">
+        <div class="df-icon">📜</div>
+        <div class="df-name">x-metrics.jsonl</div>
+        <div class="df-path">logs/</div>
+        <div class="df-rw">✍️ <span style="color:#fca5a5;">Balerion</span><br>👁️ <span style="color:#93c5fd;">Dashboard</span></div>
+      </div>
+      <div class="df-node df-log">
+        <div class="df-icon">📜</div>
+        <div class="df-name">cron-runs.jsonl</div>
+        <div class="df-path">logs/</div>
+        <div class="df-rw">✍️ <span style="color:#fca5a5;">Cron Jobs</span><br>👁️ <span style="color:#93c5fd;">Council</span></div>
+      </div>
+      <div class="df-node df-log">
+        <div class="df-icon">📜</div>
+        <div class="df-name">research-usage.jsonl</div>
+        <div class="df-path">logs/</div>
+        <div class="df-rw">✍️ <span style="color:#fca5a5;">research.py</span><br>👁️ <span style="color:#93c5fd;">Cost Tracker</span></div>
+      </div>
+      <div class="df-node df-log">
+        <div class="df-icon">📜</div>
+        <div class="df-name">learning-log.jsonl</div>
+        <div class="df-path">tools/learning-system/</div>
+        <div class="df-rw">✍️ <span style="color:#fca5a5;">learner.py</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel" style="margin-bottom:20px;">
+    <h3>⚙️ Config-Dateien</h3>
+    <div class="dataflow">
+      <div class="df-node df-config">
+        <div class="df-icon">⚙️</div>
+        <div class="df-name">config.json</div>
+        <div class="df-path">tools/learning-system/</div>
+        <div class="df-rw">✍️ <span style="color:#fca5a5;">learner.py learn/feedback</span><br>👁️ <span style="color:#93c5fd;">learner.py score</span></div>
+      </div>
+      <div class="df-node df-config">
+        <div class="df-icon">⚙️</div>
+        <div class="df-name">pricing.json</div>
+        <div class="df-path">tools/cost-tracker/</div>
+        <div class="df-rw">✍️ <span style="color:#94a3b8;">Manuell</span><br>👁️ <span style="color:#93c5fd;">report.py, log_usage.py</span></div>
+      </div>
+      <div class="df-node df-config">
+        <div class="df-icon">⚙️</div>
+        <div class="df-name">data.json</div>
+        <div class="df-path">mission-control/</div>
+        <div class="df-rw">✍️ <span style="color:#fca5a5;">Heartbeats, Cron</span><br>👁️ <span style="color:#93c5fd;">Dashboard</span></div>
+      </div>
+      <div class="df-node df-config">
+        <div class="df-icon">🔒</div>
+        <div class="df-name">accounts.json</div>
+        <div class="df-path">secrets/</div>
+        <div class="df-rw">✍️ <span style="color:#94a3b8;">Manuell</span><br>👁️ <span style="color:#93c5fd;">Alle Agents</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h3>🔗 Prozess-Querverbindungen</h3>
+    <div style="font-family:monospace;font-size:12px;line-height:1.8;padding:12px;background:#0a0e1a;border-radius:8px;overflow-x:auto;">
+      <span style="color:#fda4af;">Meleys Patrol</span> ──findings──→ <span style="color:#d8b4fe;">Knowledge Base</span> ←──search──── <span style="color:#e2e8f0;">Balerion</span><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;↑<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Blogwatcher (Learning Sweep)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;├──scores──→ <span style="color:#86efac;">Learning System</span> ←──feedback──── <span style="color:#e2e8f0;">Balerion</span><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;↑<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#fca5a5;">Reddit Job Scanner</span><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;├──threads──→ <span style="color:#fcd34d;">Thread Pipeline</span> ←──check──── <span style="color:#fcd34d;">X-Thread Skill</span><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└──leads───→ <span style="color:#86efac;">Lead Tracker</span> ←──add──── <span style="color:#fca5a5;">Reddit Job Scanner</span><br>
+      <br>
+      <span style="color:#94a3b8;">Dragon Council</span> ──reads──→ <span style="color:#fcd34d;">activity.jsonl</span> ←──writes──── <span style="color:#94a3b8;">Alle Drachen</span><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;──reads──→ <span style="color:#fcd34d;">ai-usage.jsonl</span> ←──writes──── <span style="color:#86efac;">Cost Tracker</span><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;──reads──→ <span style="color:#93c5fd;">HEARTBEAT.md + Email</span><br>
+      <br>
+      <span style="color:#fca5a5;">Dev Loop:</span> Balerion → <span style="color:#fdba74;">Vermithrax</span> (Tests) → <span style="color:#fca5a5;">Caraxes</span> (Code) → <span style="color:#fdba74;">Vermithrax</span> (QA) → PASS/FAIL Loop
+    </div>
+  </div>
+</div>
+
+<!-- ============ TAB: GOVERNANCE ============ -->
+<div id="tab-governance" class="tab">
+  <h2 style="margin-bottom:20px;">📋 Regeln & Governance</h2>
+
+  <div class="panel" style="margin-bottom:20px;">
+    <h3>🏛️ Governance-Hierarchie</h3>
+    <div class="gov-hierarchy">
+      <div class="gov-level" style="background:rgba(168,85,247,0.2);border:2px solid rgba(168,85,247,0.5);">📜 SOUL.md — WER bin ich? Persönlichkeit, Mindset, Grenzen</div>
+      <div class="gov-arrow">↓ steuert</div>
+      <div class="gov-level" style="background:rgba(59,130,246,0.2);border:2px solid rgba(59,130,246,0.5);">⚙️ AGENTS.md — WIE arbeite ich? Habits, Checklisten, Trigger</div>
+      <div class="gov-arrow">↓ steuert</div>
+      <div class="gov-level" style="background:rgba(239,68,68,0.2);border:2px solid rgba(239,68,68,0.5);">🐉 dragon-protocol.md — WIE arbeiten ALLE Drachen? Gemeinsame Regeln</div>
+      <div class="gov-arrow">↓ steuert</div>
+      <div class="gov-level" style="background:rgba(234,179,8,0.2);border:2px solid rgba(234,179,8,0.5);">💓 HEARTBEAT.md — WAS tue ich proaktiv? Aktive Aufgaben, Checks</div>
+      <div class="gov-arrow">↓ steuert</div>
+      <div class="gov-level" style="background:rgba(34,197,94,0.2);border:2px solid rgba(34,197,94,0.5);">🧠 MEMORY.md — WAS habe ich gelernt? Entscheidungen, Learnings</div>
+      <div class="gov-arrow">↓ informiert</div>
+      <div class="gov-level" style="background:rgba(100,116,139,0.2);border:2px solid rgba(100,116,139,0.5);">⏰ Cron Jobs + Tools — Automatisierte Ausführung</div>
+    </div>
+    <div style="font-size:12px;color:#64748b;text-align:center;margin-top:12px;">Regeln fließen TOP-DOWN. Beispiel: SOUL sagt "Be resourceful" → AGENTS hat "3 Wege probieren" → Tools haben Fallback-Chains</div>
+  </div>
+
+  <div class="panel" style="margin-bottom:20px;">
+    <h3>📜 Regel-Herkunft (Traceability)</h3>
+    <div class="scroll-x">
+      <table class="gov-table">
+        <thead><tr><th>Regel</th><th>Datum</th><th>Auslöser</th></tr></thead>
+        <tbody>
+          <tr><td>Nie nach erstem Fehlschlag aufgeben</td><td>2026-02-12</td><td>Bird CLI nicht genutzt, direkt Dino gefragt</td></tr>
+          <tr><td>Artikel KOMPLETT auswerten</td><td>2026-02-12</td><td>OpenAI-Artikel nur teilweise umgesetzt</td></tr>
+          <tr><td>"Soll ich?" NICHT fragen</td><td>2026-02-10</td><td>Mehrfach gefragt statt gemacht</td></tr>
+          <tr><td>PRD-Pflicht bei JEDER Programmierung</td><td>2026-02-07</td><td>Dashboard-Fehler, Daten-Inkonsistenzen</td></tr>
+          <tr><td>Liefer-Protokoll PFLICHT</td><td>2026-02-11</td><td>Dino musste auf Fehler hinweisen</td></tr>
+          <tr><td>Alle Drachen auf Opus 4.6</td><td>2026-02-12</td><td>Dino: Qualität > Kosten</td></tr>
+          <tr><td>Thread Dedupe-Check PFLICHT</td><td>2026-02-12</td><td>Berman-Analyse: Content Pipeline</td></tr>
+          <tr><td>AI-Tell Watchlist</td><td>2026-02-12</td><td>Berman UC8: Humanization</td></tr>
+          <tr><td>Monetarisierungs-Check bei JEDER Info</td><td>2026-02-10</td><td>"Bei JEDER Info: Wie Geld verdienen?"</td></tr>
+          <tr><td>Spracherkennung verstehen</td><td>2026-02-10</td><td>Diktat-Fehler (Croque→Grok)</td></tr>
+          <tr><td>YouTube Tab sofort schließen</td><td>2026-02-10</td><td>Auto-Play + Werbung im Hintergrund</td></tr>
+          <tr><td>Dino postet Threads manuell</td><td>2026-02-12</td><td>90% Kosteneinsparung pro Thread</td></tr>
+          <tr><td>SQLite statt Markdown für Tracking</td><td>2026-02-12</td><td>Berman-Analyse: Queryability</td></tr>
+          <tr><td>Learning System für Content-Filter</td><td>2026-02-12</td><td>Berman-Analyse: Statische Tools</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="panel" style="margin-bottom:20px;">
+    <h3>🚨 Eskalations-Pfade</h3>
+    <div class="esc-levels">
+      <div class="esc-level" style="background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.3);">
+        <span class="esc-badge" style="background:rgba(34,197,94,0.3);color:#86efac;">L0</span>
+        <div><strong>Automatischer Fallback</strong> — Tiered Research (Tier 1→2→3), Content Extraction Chains</div>
+      </div>
+      <div class="esc-level" style="background:rgba(59,130,246,0.1);border:1px solid rgba(59,130,246,0.3);">
+        <span class="esc-badge" style="background:rgba(59,130,246,0.3);color:#93c5fd;">L1</span>
+        <div><strong>Drache probiert 3+ Alternativen</strong> — Habit: "NIE nach erstem Fehlschlag aufgeben"</div>
+      </div>
+      <div class="esc-level" style="background:rgba(234,179,8,0.1);border:1px solid rgba(234,179,8,0.3);">
+        <span class="esc-badge" style="background:rgba(234,179,8,0.3);color:#fcd34d;">L2</span>
+        <div><strong>Balerion kompensiert</strong> — Findet Workaround, orchestriert alternative Lösung</div>
+      </div>
+      <div class="esc-level" style="background:rgba(249,115,22,0.1);border:1px solid rgba(249,115,22,0.3);">
+        <span class="esc-badge" style="background:rgba(249,115,22,0.3);color:#fdba74;">L3</span>
+        <div><strong>DM an Dino</strong> — MIT Liste was probiert wurde (NUR nach Level 0-2!)</div>
+      </div>
+      <div class="esc-level" style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);">
+        <span class="esc-badge" style="background:rgba(239,68,68,0.3);color:#fca5a5;">L4</span>
+        <div><strong>Sofort-Eskalation</strong> — Security-Breach, Datenverlust, API-Keys kompromittiert</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h3>🎯 Ziel-Alignment: Wie dient jeder Prozess dem Ziel?</h3>
+    <div style="text-align:center;padding:12px;margin-bottom:16px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:10px;font-size:16px;font-weight:700;">
+      💰 "So schnell wie möglich so viel Geld verdienen wie möglich."
+    </div>
+    <div class="scroll-x">
+      <table class="gov-table">
+        <thead><tr><th>Prozess</th><th>Beitrag zum Ziel</th><th>Typ</th></tr></thead>
+        <tbody>
+          <tr><td>💼 Job Hunting</td><td>Direkte Revenue (Upwork, Reddit)</td><td style="color:#22c55e;">💰 Direkt</td></tr>
+          <tr><td>🔧 Development</td><td>Tools die Revenue ermöglichen</td><td style="color:#3b82f6;">🔧 Enabler</td></tr>
+          <tr><td>📰 News Discovery</td><td>Reichweite → Kunden finden uns</td><td style="color:#f59e0b;">📈 Indirekt</td></tr>
+          <tr><td>🌙 Dragon Council</td><td>Richtige Prioritäten setzen</td><td style="color:#a855f7;">🧭 Strategisch</td></tr>
+          <tr><td>🔒 Security Audit</td><td>Kein Geld durch Breach verlieren</td><td style="color:#ef4444;">🛡️ Schutz</td></tr>
+          <tr><td>🛡️ System Audit</td><td>Keine kaputten Prozesse</td><td style="color:#ef4444;">🛡️ Schutz</td></tr>
+          <tr><td>🧠 Learning System</td><td>Effizienz → weniger Tokens/Kosten</td><td style="color:#3b82f6;">🔧 Enabler</td></tr>
+          <tr><td>💰 Cost Tracking</td><td>$200/Mo nicht überschreiten</td><td style="color:#ef4444;">🛡️ Schutz</td></tr>
+          <tr><td>📚 Knowledge Base</td><td>Bessere Proposals + Entscheidungen</td><td style="color:#3b82f6;">🔧 Enabler</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+// === DRAGON AVATAR SYSTEM ===
+const DRAGON_AVATARS = {
+  balerion: 'img/balerion.png', caraxes: 'img/caraxes.png', meleys: 'img/meleys.png', syrax: 'img/syrax.png',
+  vermithrax: 'img/vermithrax.png', sunfyre: 'img/sunfyre.png', vhagar: 'img/vhagar.png', dino: null
+};
+const DRAGON_EMOJIS = { dino:'👑', balerion:'🖤', caraxes:'🔴', vermithrax:'🛡️', meleys:'❤️', sunfyre:'✨', vhagar:'💰', syrax:'🩵' };
+
+// Returns HTML for a dragon avatar image (or emoji fallback for dino)
+function avatarHTML(dragon, size) {
+  size = size || 'sm';
+  const src = DRAGON_AVATARS[dragon];
+  if (!src) return ''; // dino or unknown — no img
+  return `<img class="dragon-av dragon-av-${size} dragon-av-${dragon}" src="${src}" alt="${dragon}">`;
+}
+// Returns avatar + emoji combined
+function avatarWithEmoji(dragon, size) {
+  const img = avatarHTML(dragon, size);
+  const emoji = DRAGON_EMOJIS[dragon] || '';
+  return img ? img + ' ' + emoji : emoji;
+}
+
+// Inject avatars into static HTML elements after load
+function injectStaticAvatars() {
+  // Map of emoji → dragon key
+  const emojiToDragon = {'🖤':'balerion','🔴':'caraxes','❤️':'meleys','🛡️':'vermithrax','✨':'sunfyre','💰':'vhagar','🩵':'syrax','👑':'dino'};
+
+  // 1. RACI table headers
+  document.querySelectorAll('.raci-table th').forEach(th => {
+    const text = th.textContent.trim();
+    for (const [emoji, dragon] of Object.entries(emojiToDragon)) {
+      if (text.startsWith(emoji) && DRAGON_AVATARS[dragon]) {
+        th.innerHTML = avatarHTML(dragon, 'sm') + ' ' + th.innerHTML;
+        break;
+      }
+    }
+  });
+
+  // 2. Feed filter buttons
+  document.querySelectorAll('.feed-filter').forEach(btn => {
+    const text = btn.textContent.trim();
+    for (const [emoji, dragon] of Object.entries(emojiToDragon)) {
+      if (text.startsWith(emoji) && DRAGON_AVATARS[dragon]) {
+        btn.innerHTML = avatarHTML(dragon, 'sm') + ' ' + btn.innerHTML;
+        break;
+      }
+    }
+  });
+
+  // 3. step-who spans in flowcharts
+  document.querySelectorAll('.step-who').forEach(span => {
+    const text = span.textContent.trim();
+    for (const [emoji, dragon] of Object.entries(emojiToDragon)) {
+      if (text.includes(emoji) && DRAGON_AVATARS[dragon]) {
+        span.innerHTML = avatarHTML(dragon, 'sm') + ' ' + span.innerHTML;
+        break;
+      }
+    }
+  });
+
+  // 4. ops-dragon spans in timelines
+  document.querySelectorAll('.ops-dragon').forEach(span => {
+    const text = span.textContent.trim();
+    for (const [emoji, dragon] of Object.entries(emojiToDragon)) {
+      if (text.startsWith(emoji) && DRAGON_AVATARS[dragon]) {
+        span.innerHTML = avatarHTML(dragon, 'sm') + ' ' + span.innerHTML;
+        break;
+      }
+    }
+  });
+
+  // 5. Cron cards — h4 titles
+  document.querySelectorAll('.cron-card h4').forEach(h4 => {
+    const text = h4.textContent.trim();
+    for (const [emoji, dragon] of Object.entries(emojiToDragon)) {
+      if (text.startsWith(emoji) && DRAGON_AVATARS[dragon]) {
+        h4.innerHTML = avatarHTML(dragon, 'sm') + ' ' + h4.innerHTML;
+        break;
+      }
+    }
+  });
+
+  // 6. Cron card details mentioning dragons
+  document.querySelectorAll('.cron-detail').forEach(div => {
+    const text = div.textContent;
+    for (const [emoji, dragon] of Object.entries(emojiToDragon)) {
+      if (text.includes(emoji) && DRAGON_AVATARS[dragon] && !div.querySelector('.dragon-av')) {
+        div.innerHTML = div.innerHTML.replace(emoji, avatarHTML(dragon, 'sm') + ' ' + emoji);
+      }
+    }
+  });
+
+  // 7. Governance: audit table "Wer" column, gov-level divs, esc-level divs
+  document.querySelectorAll('.gov-table td, .gov-level, .esc-level div, .audit-stat').forEach(el => {
+    for (const [emoji, dragon] of Object.entries(emojiToDragon)) {
+      if (el.innerHTML.includes(emoji) && DRAGON_AVATARS[dragon] && !el.querySelector('.dragon-av')) {
+        el.innerHTML = el.innerHTML.replace(emoji, avatarHTML(dragon, 'sm') + ' ' + emoji);
+      }
+    }
+  });
+
+  // 8. Audit tab tables
+  document.querySelectorAll('#tab-audit .raci-table td').forEach(td => {
+    for (const [emoji, dragon] of Object.entries(emojiToDragon)) {
+      if (td.innerHTML.includes(emoji) && DRAGON_AVATARS[dragon] && !td.querySelector('.dragon-av')) {
+        td.innerHTML = td.innerHTML.replace(emoji, avatarHTML(dragon, 'sm') + ' ' + emoji);
+      }
+    }
+  });
+
+  // 9. Tool card workflow spans
+  document.querySelectorAll('.tool-workflows span, .tool-desc, .tool-card .tool-db-info').forEach(el => {
+    for (const [emoji, dragon] of Object.entries(emojiToDragon)) {
+      if (el.innerHTML.includes(emoji) && DRAGON_AVATARS[dragon] && !el.querySelector('.dragon-av')) {
+        el.innerHTML = el.innerHTML.replace(emoji, avatarHTML(dragon, 'sm') + ' ' + emoji);
+      }
+    }
+  });
+}
+
+// === ASSERTIONS DATA ===
+const ASSERTIONS = [
+  {id:'T-001',desc:'kb.py --action stats gibt Text mit Sources/Chunks/Size zurück (Exit 0)',cat:'tools'},
+  {id:'T-002',desc:'kb.py --action list --limit 5 gibt Knowledge Base Header zurück (Exit 0)',cat:'tools'},
+  {id:'T-003',desc:'kb.py --action search --query "AI news" gibt Ergebnisse oder "No results" (Exit 0, benötigt GEMINI_API_KEY)',cat:'tools'},
+  {id:'T-004',desc:'tracker.py --action list gibt Tabelle mit Leads zurück (Exit 0)',cat:'tools'},
+  {id:'T-005',desc:'tracker.py --action stats gibt "Lead Stats" mit Total/Applied/Won zurück (Exit 0)',cat:'tools'},
+  {id:'T-006',desc:'tracker.py --action search --query "AI" gibt Ergebnisse oder "No results" (Exit 0)',cat:'tools'},
+  {id:'T-007',desc:'pipeline.py --action stats gibt "Thread Stats" mit Total und By Status zurück (Exit 0)',cat:'tools'},
+  {id:'T-008',desc:'pipeline.py --action list gibt Thread-Tabelle oder "No threads found" (Exit 0)',cat:'tools'},
+  {id:'T-009',desc:'pipeline.py --action check --title "Test Thread" gibt JSON mit is_duplicate Key (Exit 0)',cat:'tools'},
+  {id:'T-010',desc:'learner.py --action stats gibt JSON mit prefer_keywords und skip_domains Keys (Exit 0)',cat:'tools'},
+  {id:'T-011',desc:'learner.py --action score --title "AI startup funding" gibt JSON mit score und action Keys (Exit 0)',cat:'tools'},
+  {id:'T-012',desc:'learner.py --action score --title "Buy now limited offer sponsored" gibt action: "skip"',cat:'tools'},
+  {id:'T-013',desc:'validate.py --text "This is a short test" --type note gibt JSON mit valid Key (Exit 0)',cat:'tools'},
+  {id:'T-014',desc:'validate.py --text "access denied 403 forbidden captcha cloudflare" --type article gibt valid: false (Exit 1)',cat:'tools'},
+  {id:'T-015',desc:'report.py gibt "AI Usage Report" oder "No data found" (Exit 0)',cat:'tools'},
+  {id:'T-016',desc:'report.py --weekly gibt "Weekly Cost Summary" oder "No data" (Exit 0)',cat:'tools'},
+  {id:'T-017',desc:'report.sh gibt gleichen Output wie report.py (Exit 0)',cat:'tools'},
+  {id:'T-018',desc:'tracker.sh --action list gibt gleichen Output wie tracker.py (Exit 0)',cat:'tools'},
+  {id:'T-019',desc:'research.py "test" --mode tweet --json gibt JSON mit tier Key',cat:'tools'},
+  {id:'T-020',desc:'knowledge.db existiert und ist valide SQLite (SELECT COUNT(*) FROM sources → Zahl)',cat:'db'},
+  {id:'T-021',desc:'leads.db existiert und ist valide SQLite (SELECT COUNT(*) FROM leads → Zahl)',cat:'db'},
+  {id:'T-022',desc:'threads.db existiert und ist valide SQLite (SELECT COUNT(*) FROM threads → Zahl)',cat:'db'},
+  {id:'T-023',desc:'knowledge.db hat Tabellen sources und chunks',cat:'db'},
+  {id:'T-024',desc:'leads.db hat Tabellen leads und status_history',cat:'db'},
+  {id:'T-025',desc:'threads.db hat Tabelle threads mit Spalte status',cat:'db'},
+  {id:'T-026',desc:'Alle SQLite DBs nutzen WAL-Modus (PRAGMA journal_mode → "wal")',cat:'db'},
+  {id:'T-027',desc:'activity.jsonl existiert und jede nicht-leere Zeile ist valides JSON',cat:'logs'},
+  {id:'T-028',desc:'dragon-status.jsonl existiert und jede nicht-leere Zeile ist valides JSON',cat:'logs'},
+  {id:'T-029',desc:'ai-usage.jsonl existiert und jede nicht-leere Zeile ist valides JSON',cat:'logs'},
+  {id:'T-030',desc:'x-metrics.jsonl existiert und jede nicht-leere Zeile ist valides JSON',cat:'logs'},
+  {id:'T-031',desc:'cron-runs.jsonl existiert und jede nicht-leere Zeile ist valides JSON',cat:'logs'},
+  {id:'T-032',desc:'research-usage.jsonl existiert und jede nicht-leere Zeile ist valides JSON',cat:'logs'},
+  {id:'T-033',desc:'Jeder Eintrag in activity.jsonl hat ein ts Feld',cat:'logs'},
+  {id:'T-034',desc:'Jeder Eintrag in dragon-status.jsonl hat ts und dragon Felder',cat:'logs'},
+  {id:'T-035',desc:'Jeder Eintrag in ai-usage.jsonl hat timestamp, model, tokens, costEstimate Felder',cat:'logs'},
+  {id:'T-036',desc:'config.json ist valides JSON mit Keys: skip_domains, skip_keywords, prefer_keywords, prefer_domains, min_quality_score',cat:'config'},
+  {id:'T-037',desc:'pricing.json ist valides JSON mit mindestens 5 Model-Einträgen',cat:'config'},
+  {id:'T-038',desc:'Jeder Eintrag in pricing.json hat input und output Keys (numeric)',cat:'config'},
+  {id:'T-039',desc:'config.json prefer_keywords enthält "AI" (Kern-Keyword)',cat:'config'},
+  {id:'T-040',desc:'config.json min_quality_score ist eine Zahl zwischen 0 und 100',cat:'config'},
+  {id:'T-041',desc:'secrets/accounts.json existiert und ist valides JSON',cat:'config'},
+  {id:'T-042',desc:'mission-control/data.json existiert und enthält dragons Key',cat:'config'},
+  {id:'T-043',desc:'Blogwatcher ist installiert und erreichbar',cat:'config'},
+  {id:'T-044',desc:'openclaw cron list zeigt mindestens 8 Jobs',cat:'cron'},
+  {id:'T-045',desc:'Meleys News Patrol ist enabled (ID: b39d6dad)',cat:'cron'},
+  {id:'T-046',desc:'Reddit Job Scanner ist enabled (ID: 16a7e88a)',cat:'cron'},
+  {id:'T-047',desc:'Nightly Dragon Council ist enabled (ID: 60cf6592)',cat:'cron'},
+  {id:'T-048',desc:'Daily Learning Sweep ist enabled (ID: b3f7034a)',cat:'cron'},
+  {id:'T-049',desc:'Security Audit ist enabled (ID: eaf9b461)',cat:'cron'},
+  {id:'T-050',desc:'Weekly AI Intelligence Review ist enabled (ID: f1a2a08f)',cat:'cron'},
+  {id:'T-051',desc:'GitHub Opportunities Scan ist enabled (ID: d39a0031)',cat:'cron'},
+  {id:'T-052',desc:'Weekly Skills & Tools Discovery ist enabled (ID: 260107da)',cat:'cron'},
+  {id:'T-053',desc:'Alle recurring Cron Jobs haben sessionTarget: "isolated"',cat:'cron'},
+  {id:'T-054',desc:'Alle recurring Cron Jobs haben lastStatus: "ok" oder idle',cat:'cron'},
+  {id:'T-055',desc:'dragon-protocol.md existiert und enthält "Security"',cat:'docs'},
+  {id:'T-056',desc:'dragon-protocol.md enthält "Activity Logging" Abschnitt',cat:'docs'},
+  {id:'T-057',desc:'dragon-protocol.md enthält "Monetarisierungs-Check"',cat:'docs'},
+  {id:'T-058',desc:'dragon-protocol.md enthält "PRD" Pflicht-Abschnitt',cat:'docs'},
+  {id:'T-059',desc:'HEARTBEAT.md existiert und enthält "Lead Tracker" oder "tracker"',cat:'docs'},
+  {id:'T-060',desc:'HEARTBEAT.md verweist auf tools/lead-tracker/tracker.sh',cat:'docs'},
+  {id:'T-061',desc:'MEMORY.md existiert und enthält "Drachenfamilie"',cat:'docs'},
+  {id:'T-062',desc:'AGENTS.md existiert und enthält "Dragon Dev Loop" Habit',cat:'docs'},
+  {id:'T-063',desc:'AGENTS.md enthält "Skill-Design" Habit',cat:'docs'},
+  {id:'T-064',desc:'AGENTS.md enthält "Monetarisierungs-Check" Habit',cat:'docs'},
+  {id:'T-065',desc:'dragon-playbooks/dev-loop.md existiert (ANFORDERUNGEN → TESTS → IMPLEMENT → QA)',cat:'docs'},
+  {id:'T-066',desc:'dragon-playbooks/vermithrax-qa.md existiert und enthält "Compliance-Checkliste"',cat:'docs'},
+  {id:'T-067',desc:'dragon-playbooks/balerion-qa-validation.md existiert und enthält "Red Flags"',cat:'docs'},
+  {id:'T-068',desc:'operations/weekly-ai-review.md existiert und enthält "Matt Wolfe"',cat:'docs'},
+  {id:'T-069',desc:'operations/x-threads.md existiert und enthält "PRE-POST PFLICHT-CHECK"',cat:'docs'},
+  {id:'T-070',desc:'skills/x-thread-creator/SKILL.md existiert und enthält "DEDUPE CHECK FIRST"',cat:'docs'},
+  {id:'T-071',desc:'skills/x-thread-creator/references/thread-template.md existiert und enthält "NUMMERIERUNGS-REGELN"',cat:'docs'},
+  {id:'T-072',desc:'skills/dragon-dev-loop/SKILL.md existiert und beschreibt den Loop',cat:'docs'},
+  {id:'T-073',desc:'Meleys Patrol Prompt enthält "learning-system"',cat:'workflow'},
+  {id:'T-074',desc:'Meleys Patrol Prompt enthält "knowledge-base" oder "kb.py"',cat:'workflow'},
+  {id:'T-075',desc:'Meleys Patrol Prompt enthält "thread-pipeline" oder "pipeline.py"',cat:'workflow'},
+  {id:'T-076',desc:'Reddit Job Scanner Prompt enthält "lead-tracker" oder "tracker.py"',cat:'workflow'},
+  {id:'T-077',desc:'Reddit Job Scanner Prompt enthält "learning-system" oder "learner.py"',cat:'workflow'},
+  {id:'T-078',desc:'X Thread Creator Skill hat Dedupe-Check als ERSTEN Workflow-Schritt',cat:'workflow'},
+  {id:'T-079',desc:'Dragon Dev Loop Skill beschreibt: Requirements → Tests → Implement → QA',cat:'workflow'},
+  {id:'T-080',desc:'Nightly Dragon Council Prompt enthält "Four-Dragon" oder "vier Perspektiven"',cat:'workflow'},
+  {id:'T-081',desc:'x-threads/ Verzeichnis existiert',cat:'fs'},
+  {id:'T-082',desc:'memory/ Verzeichnis existiert',cat:'fs'},
+  {id:'T-083',desc:'intelligence/ Verzeichnis existiert',cat:'fs'},
+  {id:'T-084',desc:'operations/ Verzeichnis existiert',cat:'fs'},
+  {id:'T-085',desc:'branding/ Verzeichnis existiert',cat:'fs'},
+  {id:'T-086',desc:'projects/ Verzeichnis existiert',cat:'fs'},
+  {id:'T-087',desc:'mission-control/logs/ Verzeichnis existiert',cat:'fs'},
+  {id:'T-088',desc:'tools/tiered-research/cache/ Verzeichnis existiert',cat:'fs'},
+  {id:'T-089',desc:'python3 -c "import sqlite3, json, hashlib, argparse, re, os, sys" → Exit 0',cat:'python'},
+  {id:'T-090',desc:'Keines der Python-Tools hat pip install oder import requests',cat:'python'},
+  {id:'T-091',desc:'kb.py verwendet nur stdlib + curl subprocess',cat:'python'},
+  {id:'T-092',desc:'research.py verwendet nur stdlib + curl subprocess',cat:'python'},
+  {id:'T-093',desc:'Alle recurring Cron Jobs nutzen Claude Opus 4.6',cat:'cron'},
+  {id:'T-094',desc:'Learning System config hat min_quality_score = 40',cat:'config'},
+  {id:'T-095',desc:'Content Validator Exit-Code 0 = valid, 1 = invalid',cat:'tools'},
+  {id:'T-096',desc:'Thread Pipeline valide Status: pitched, accepted, rejected, produced, posted, duplicate',cat:'tools'},
+  {id:'T-097',desc:'Lead Tracker Auto-Score: AI/automation +10, >$1000 +15',cat:'tools'},
+  {id:'T-098',desc:'Knowledge Base Chunking: 800 chars max, 200 overlap, 100 minimum',cat:'tools'},
+  {id:'T-099',desc:'Tiered Research Cache TTL = 1 Stunde',cat:'tools'},
+  {id:'T-100',desc:'Dragon Dev Loop max 3 Iterationen vor Eskalation',cat:'workflow'}
+];
+
+function renderAssertions(filter) {
+  const tbody = document.querySelector('#assertions-table tbody');
+  if (!tbody) return;
+  const catLabels = {tools:'🔧 Tools',db:'🗄️ DB',logs:'📜 Logs',config:'⚙️ Config',cron:'⏰ Cron',docs:'📄 Docs',workflow:'🔄 Workflow',fs:'📁 FS',python:'🐍 Python'};
+  const catCls = {tools:'cat-tools',db:'cat-db',logs:'cat-logs',config:'cat-config',cron:'cat-cron',docs:'cat-docs',workflow:'cat-workflow',fs:'cat-fs',python:'cat-python'};
+  const filtered = filter === 'all' ? ASSERTIONS : ASSERTIONS.filter(a => a.cat === filter);
+  tbody.innerHTML = filtered.map(a => `<tr data-cat="${a.cat}">
+    <td style="font-family:monospace;font-weight:700;color:#f59e0b;white-space:nowrap;">${a.id}</td>
+    <td>${a.desc}</td>
+    <td><span class="assert-cat ${catCls[a.cat]}">${catLabels[a.cat]}</span></td>
+    <td style="text-align:center;font-size:16px;">⏳</td>
+  </tr>`).join('');
+}
+
+function filterAssertions(cat) {
+  document.querySelectorAll('#tab-audit .feed-filter').forEach(b => b.classList.remove('active'));
+  if (event && event.target) event.target.classList.add('active');
+  renderAssertions(cat);
+}
+
+// Init assertions table
+renderAssertions('all');
+
+let dragonRefreshInterval = null;
+let cachedData = null;
+
+function showTab(id, btn) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + id).classList.add('active');
+  if (btn) btn.classList.add('active');
+  else if (event && event.target) event.target.classList.add('active');
+  refreshAll(); // IMMER refreshen bei Tab-Wechsel
+  if (id === 'dragons' && !dragonRefreshInterval) {
+    dragonRefreshInterval = setInterval(refreshAll, 60000);
+  } else if (id !== 'dragons' && dragonRefreshInterval) {
+    clearInterval(dragonRefreshInterval); dragonRefreshInterval = null;
+  }
+}
+
+const STATUS_CONFIG = {
+  regiert:      { cls: 'ruling',  icon: '👑', label: 'Regiert',       glow: 'glow-gold' },
+  fliegt:       { cls: 'flying',  icon: '🟢', label: 'Fliegt',        glow: 'glow-green' },
+  patrouilliert:{ cls: 'flying',  icon: '🔄', label: 'Patrouilliert', glow: 'glow-blue' },
+  ruht:         { cls: 'sleeping',icon: '💤', label: 'Ruht',          glow: null },
+  kämpft:       { cls: 'fighting',icon: '⚔️', label: 'Kämpft',       glow: 'glow-red' },
+  siegreich:    { cls: 'flying',  icon: '🏆', label: 'Siegreich',     glow: 'glow-green' },
+  bereit:       { cls: 'sleeping',icon: '⏳', label: 'Bereit',        glow: null },
+  gelandet:     { cls: 'sleeping',icon: '🛬', label: 'Gelandet',      glow: null }
+};
+
+const EMOJI_MAP = { dino: '👑', balerion: '🖤', vhagar: '💰', syrax: '🩵', caraxes: '🔴', vermithrax: '🛡️', meleys: '❤️', sunfyre: '✨' };
+
+function renderAvatar(d) {
+  if (d.avatar && d.avatar.startsWith('img/')) return `<img src="${d.avatar}" alt="${d.displayName}">`;
+  return d.avatar || EMOJI_MAP[name] || '🐉';
+}
+
+function renderOrgChart(dragons, activityLog) {
+  const container = document.getElementById('org-chart-container');
+  if (!container || !dragons) return;
+  const dino = dragons.dino;
+  const bal = dragons.balerion;
+  const subs = ['vhagar','syrax','caraxes','vermithrax','meleys','sunfyre'].map(k => ({key:k, ...dragons[k]})).filter(d => d.displayName); // UNIFIED ORDER
+
+  function orgStatus(key) {
+    if (key === 'dino') return STATUS_CONFIG.regiert;
+    const d = dragons[key] || {};
+    // Live status from dragon-status.jsonl has highest priority
+    if (d._liveStatus && STATUS_CONFIG[d._liveStatus]) return STATUS_CONFIG[d._liveStatus];
+    if (d.status && STATUS_CONFIG[d.status]) return STATUS_CONFIG[d.status];
+    return STATUS_CONFIG.ruht;
+  }
+
+  container.innerHTML = `
+    <div style="text-align:center; margin-bottom: -8px;">
+      <div style="font-size: 13px; color: #64748b; text-transform: uppercase; letter-spacing: 2px;">${dino.role}</div>
+      <div style="font-size: 28px; margin: 8px 0;">${dino.avatar || '👑'}</div>
+      <div style="font-size: 20px; font-weight: 700;">${dino.displayName}</div>
+      <div style="font-size: 13px; color: #94a3b8;">Vision • Strategie • Final Decisions</div>
+    </div>
+    <div class="org-line"></div>
+    <div class="agent-card primary" style="min-width: 360px;">
+      <div class="status-dot ${orgStatus('balerion').cls}"></div>
+      <div class="agent-header">
+        <div class="agent-icon"><div class="dragon-avatar">${renderAvatar(bal)}</div></div>
+        <div>
+          <div class="agent-name">${bal.displayName}</div>
+          <div class="agent-role">${bal.role}</div>
+        </div>
+      </div>
+      <div class="agent-model">${bal.model}</div>
+      <div class="agent-cost">💰 ${bal.cost}</div>
+      <div class="agent-tags">${bal.tags.map(t => `<span class="tag ${bal.tagColor}">${t}</span>`).join('')}</div>
+    </div>
+    <div class="org-line"></div>
+    <div class="sub-agents">
+      ${subs.map(d => `
+        <div class="agent-card ${d.cardClass}">
+          <div class="status-dot ${orgStatus(d.key).cls}"></div>
+          <div class="agent-header">
+            <div class="agent-icon"><div class="dragon-avatar">${renderAvatar(d)}</div></div>
+            <div>
+              <div class="agent-name">${d.displayName}</div>
+              <div class="agent-role">${d.role}</div>
+            </div>
+          </div>
+          <div class="agent-model">${d.model}</div>
+          <div class="agent-cost">💰 ${d.cost}</div>
+          <div style="font-size:11px; color:#64748b; margin-bottom:10px; font-style:italic;">${d.desc}</div>
+          <div class="agent-tags">${d.tags.map(t => `<span class="tag ${d.tagColor}">${t}</span>`).join('')}</div>
+        </div>
+      `).join('')}
+    </div>
+    <div class="legend">
+      <div class="legend-item"><div class="legend-dot" style="background:#22c55e;box-shadow:0 0 6px #22c55e;"></div> Aktiv</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#3b82f6;box-shadow:0 0 6px #3b82f6;"></div> Patrouilliert</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#64748b;"></div> Ruht/Bereit</div>
+    </div>
+  `;
+}
+
+function renderDragons(dragons, activityLog) {
+  const container = document.getElementById('dragons-container');
+  if (!container || !dragons) return;
+
+  // Build unified timeline per dragon from activity.jsonl
+  const byDragon = {};
+  (activityLog || []).forEach(a => {
+    if (!a.dragon) return;
+    if (!byDragon[a.dragon]) byDragon[a.dragon] = [];
+    const detail = a.type === 'takeoff' ? a.topic || a.mission || 'Mission gestartet'
+      : a.type === 'landing' ? a.topic || a.mission || 'Mission beendet'
+      : a.type === 'patrol' ? 'Patrol — ' + (a.findings||0) + ' Findings' + (a.threadPosted ? ' → Thread!' : '') + (a.note ? ' — ' + a.note.substring(0,60) : '')
+      : a.type === 'thread' ? 'Thread: ' + (a.topic||'')
+      : a.type === 'reply-jack' ? 'Reply-Jack: ' + (a.target||'')
+      : a.type === 'system' ? '🔧 ' + (a.topic || '')
+      : a.topic || a.note || a.type || '—';
+    byDragon[a.dragon].push({ ts: a.ts, action: a.type || 'landing', mission: detail });
+  });
+
+  function dragonStatus(key) {
+    if (key === 'dino') return STATUS_CONFIG.regiert;
+    const d = dragons[key] || {};
+    if (d._liveStatus && STATUS_CONFIG[d._liveStatus]) return STATUS_CONFIG[d._liveStatus];
+    const logs = byDragon[key] || [];
+    if (logs.length > 0) {
+      const last = logs[logs.length - 1];
+      return last.action === 'takeoff' ? STATUS_CONFIG.fliegt : STATUS_CONFIG.ruht;
+    }
+    if (d.status && STATUS_CONFIG[d.status]) return STATUS_CONFIG[d.status];
+    return STATUS_CONFIG.ruht;
+  }
+
+  function dragonTask(key) {
+    const d = dragons[key] || {};
+    if (d._liveTask) return d._liveTask;
+    const logs = byDragon[key] || [];
+    if (logs.length > 0) {
+      const last = logs[logs.length - 1];
+      const t = new Date(last.ts || last.timestamp).toLocaleString('de-DE', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' });
+      if (last.action === 'takeoff') return '🛫 ' + last.mission + ' (seit ' + t + ')';
+      return '🛬 Gelandet um ' + t;
+    }
+    return d.task || '—';
+  }
+
+  function dragonMission(key) {
+    const logs = byDragon[key] || [];
+    for (let i = logs.length - 1; i >= 0; i--) {
+      if (logs[i].action === 'landing') {
+        const t = new Date(logs[i].ts || logs[i].timestamp).toLocaleString('de-DE', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' });
+        return logs[i].mission + ' (' + t + ')';
+      }
+    }
+    return (dragons[key] || {}).lastMission || '—';
+  }
+
+  function timeAgo(ts) {
+    if (!ts) return '';
+    const diff = Date.now() - new Date(ts).getTime();
+    const mins = Math.floor(diff / 60000);
+    if (mins < 1) return 'gerade eben';
+    if (mins < 60) return 'vor ' + mins + ' Min';
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24) return 'vor ' + hrs + 'h';
+    return 'vor ' + Math.floor(hrs / 24) + 'd';
+  }
+
+  function renderLog(key) {
+    const logs = (byDragon[key] || []).slice(-4).reverse();
+    if (logs.length === 0) return '';
+    return '<div class="pkmn-log">' + logs.map(e => {
+      const t = new Date(e.ts || e.timestamp).toLocaleString('de-DE', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' });
+      const icon = e.action === 'takeoff' ? '🛫' : e.action === 'patrol' ? '🔍' : '🛬';
+      return `<div class="pkmn-log-entry"><span class="pkmn-log-time">${t}</span><span>${icon}</span><span>${e.mission}</span></div>`;
+    }).join('') + '</div>';
+  }
+
+  // Pokémon card data — static dragon profiles
+  const PROFILES = {
+    dino: {
+      emoji: '👑', name: 'Dino', beiname: 'Der König',
+      strengths: ['Vision & Strategie', 'Finale Entscheidungen', 'Thread-Posting (manuell)', 'Budget & Prioritäten'],
+      tasks: ['Reviewed Threads & Posts', 'Entscheidet über Bewerbungen', 'Setzt strategische Richtung'],
+      tools: ['Discord DM', 'X/Twitter'],
+      rules: ['Einziger der postet', 'Entscheidet Budget', 'Gibt Richtung vor'],
+      model: 'Human Intelligence 🧠'
+    },
+    balerion: {
+      emoji: '🖤', name: 'Balerion', beiname: 'Der Schwarze Schrecken — Hand des Königs',
+      strengths: ['🧠 Orchestrierung & Multi-Agent-Koordination', '🔍 Quality Gate — letzte Prüfinstanz vor Dino', '♟️ Strategisches Denken & Proaktives Handeln', '🗣️ Einziger Kommunikationskanal zu Dino', '⚡ High-Agency Operator — gibt nie auf'],
+      tasks: ['Sub-Agents spawnen & koordinieren', 'Heartbeats & System-Monitoring', 'Dino\'s einziger Ansprechpartner', 'Finale QA aller Ergebnisse', 'Mission Control pflegen'],
+      tools: ['Alle Tools (direkt + indirekt)', 'Discord', 'Browser Relay', 'Sub-Agent Spawning', 'Cron-Management'],
+      rules: ['Nie ungeprüft weiterleiten', 'Plausibilitäts-Check bei allem', 'Vollständiges Liefer-Protokoll PFLICHT', 'Min. 3 Wege probieren bevor eskalieren'],
+      model: 'Claude Opus 4.6',
+      modelDetail: 'Anthropic · 200k Context · $15/$75 per 1M Tokens'
+    },
+    caraxes: {
+      emoji: '🔴', name: 'Caraxes', beiname: 'Der Blutdrache — Lead Software Engineer',
+      strengths: ['⚙️ Full-Stack Software Engineering', '🏗️ System-Architektur & Tool-Building', '⚡ Schnelle Implementierung (Pure Python 3 stdlib)', '🔧 7 Custom Tools gebaut (KB, Leads, Pipeline...)', '🐛 Debugging & Performance-Optimierung'],
+      tasks: ['Feature-Implementierung', 'Reddit Job Scanner (2x/Tag)', 'GitHub Opportunities (Mo+Do)', 'Dashboard & Mission Control Development'],
+      tools: ['Python 3', 'SQLite', 'git', 'gh CLI', 'Shell', 'HTML/CSS/JS'],
+      rules: ['Tests müssen bestehen', 'PRD-Pflicht bei JEDER Aufgabe', 'Vermithrax-Freigabe nötig', 'Max 3 QA-Loops', 'Nur stdlib — kein pip'],
+      model: 'Claude Opus 4.6',
+      modelDetail: 'Anthropic · 200k Context · $15/$75 per 1M Tokens'
+    },
+    meleys: {
+      emoji: '❤️', name: 'Meleys', beiname: 'Die Rote Königin — Senior Research Analyst',
+      strengths: ['🔬 Tiefgehende Multi-Source-Recherche', '📡 Trend-Erkennung & Frühwarnung', '📊 Quellen-Bewertung & Scoring', '🧩 Muster erkennen über Quellen hinweg', '💡 Strategische Empfehlungen ableiten'],
+      tasks: ['News Patrol (4x/Tag — 25 Feeds)', 'Weekly AI Intelligence Review', 'Thread-Vorschläge an Sunfyre', 'Strategische Recherche auf Anfrage'],
+      tools: ['Blogwatcher (25 Feeds)', 'Grok API', 'Brave Search', 'Learning System', 'Knowledge Base (Gemini Embeddings)', 'Thread Pipeline', 'Content Validator'],
+      rules: ['Learning System Score ≥40 vorfiltern', 'KB bei Score ≥7/10 speichern', 'Dedupe-Check vor Thread', '3-Tier Research: FxTwitter→Grok→Brave'],
+      model: 'Claude Opus 4.6',
+      modelDetail: 'Anthropic · 200k Context · $15/$75 per 1M Tokens'
+    },
+    vermithrax: {
+      emoji: '🛡️', name: 'Vermithrax', beiname: 'Der Prüfer — QA Executor',
+      strengths: ['🛡️ Unnachgiebige Qualitätskontrolle', '🔎 Regressions-Erkennung & Edge Cases', '⚖️ Ehrliche, schonungslose Bewertung', '📊 Präzise PASS/FAIL Berichte', '🔬 Führt Tests aus die ANDERE geschrieben haben'],
+      tasks: ['Syrax\' Test-Specs ausführen', 'QA Reports mit PASS/FAIL', 'System-Audits durchführen', 'Compliance prüfen'],
+      tools: ['pytest', 'Vitest', 'Playwright', 'Shell/exec', 'Traceability Matrix'],
+      rules: ['Schreibt KEINE eigenen Tests (Syrax schreibt sie)', 'Führt Tests nur AUS — ehrlich melden', 'Kein FAIL an Dino — Loop bis PASS', 'Kann sich nicht selbst bescheißen'],
+      model: 'Claude Opus 4.6',
+      modelDetail: 'Anthropic · 200k Context · $15/$75 per 1M Tokens'
+    },
+    sunfyre: {
+      emoji: '✨', name: 'Sunfyre', beiname: 'Der Goldene — Content Creator & Copywriter',
+      strengths: ['✍️ Kreatives Schreiben mit Human Voice', '🎭 AI-Tell Elimination (7 Detektionspunkte)', '📢 Marketing-Instinkt & Überzeugungskraft', '🧲 Hook-Crafting & Engagement-Optimierung', '🎨 Visuelles Gespür für Formate'],
+      tasks: ['X/Twitter Threads (Copy-Paste-Ready)', 'Upwork-Proposals & Pitch-Decks', 'Marketing-Material & Landing Pages', 'Content Humanization aller Outputs'],
+      tools: ['Thread Pipeline', 'X-Thread Skill + Template', 'Content Validator', 'Jaccard Dedupe (>0.4 = warn)'],
+      rules: ['AI-Tell Humanization (keine "delve", "landscape"…)', 'Copy-Paste-Ready — Dino tippt NIE um', 'Quality Threshold 8/10', 'Dedupe-Check als ERSTER Schritt'],
+      model: 'Claude Opus 4.6',
+      modelDetail: 'Anthropic · 200k Context · $15/$75 per 1M Tokens'
+    },
+    syrax: {
+      emoji: '🩵', name: 'Syrax', beiname: 'Die Architektin — Design & Test-Design Lead',
+      strengths: ['📐 System-Design & Workflow-Architektur', '📋 PRDs, Design-Specs, Datenmodelle', '🧪 Test-Spezifikationen (kennt Design am besten)', '🎯 Beste Lösung ZUERST finden', '🏗️ Skalierbare Strukturen von Tag 1'],
+      tasks: ['Design-Specs für alle Features', 'Test-Spezifikationen schreiben', 'Workflow-Spezifikationen', 'Datenmodell-Entwürfe', 'Architektur-Reviews'],
+      tools: ['Mermaid Diagramme', 'PRD Templates', 'Test-Spec Templates', 'Workflow-Specs'],
+      rules: ['Design + Test-Design — beides von Syrax', 'Vermithrax führt nur aus, schreibt keine Tests', 'Skalierbar denken, pragmatisch starten', 'Jede Spec muss testbar sein'],
+      model: 'Claude Opus 4.6',
+      modelDetail: 'Anthropic · 200k Context · $15/$75 per 1M Tokens'
+    },
+    vhagar: {
+      emoji: '💰', name: 'Vhagar', beiname: 'Der Revenue Guardian — CFO der Drachen',
+      strengths: ['💰 Finanz-Analyse & ROI-Bewertung', '📈 Opportunity-Scoring & Expected Value', '💸 Token-Kosten-Kontrolle & Budget-Monitoring', '🎯 "Kommt Geld rein?"-Filter bei ALLEM', '⚖️ Investition vs. Sparsamkeit abwägen'],
+      tasks: ['Revenue-Perspektive im Dragon Council (02:00)', 'Cost Monitoring & Spend-Warnungen', 'Lead-Bewertung & Pricing-Empfehlungen', 'Expected Value für jede Opportunity'],
+      tools: ['Lead Tracker (SQLite)', 'Cost Tracker (JSONL)', 'Brave Search (Markt-Research)'],
+      rules: ['Immer fragen "Kommt Geld rein?"', 'Opportunity Cost bei jeder Entscheidung', 'Konkreten EV berechnen (nicht schätzen)', '>25% Budget-Warnung automatisch'],
+      model: 'Claude Opus 4.6',
+      modelDetail: 'Anthropic · 200k Context · $15/$75 per 1M Tokens'
+    }
+  };
+
+  function renderPkmnCard(key, isKing) {
+    const p = PROFILES[key];
+    if (!p) return '';
+    const cfg = dragonStatus(key);
+    const dotCls = (cfg.cls === 'flying' || cfg.cls === 'ruling') ? 'active' : cfg.cls === 'fighting' ? 'active' : 'idle';
+    const lastLog = (byDragon[key] || []).slice(-1)[0];
+    const mission = dragonMission(key);
+    const task = dragonTask(key);
+
+    return `<div class="pkmn-card pkmn-${key} ${isKing ? 'pkmn-king' : ''}">
+      <div class="pkmn-card-inner">
+        <div class="pkmn-header">
+          <span class="pkmn-emoji">${DRAGON_AVATARS[key] ? avatarHTML(key, 'lg') : p.emoji}</span>
+          <span class="pkmn-name">${p.name}</span>
+          <span class="pkmn-status-dot ${dotCls}" title="${cfg.label}"></span>
+        </div>
+        <div class="pkmn-beiname">"${p.beiname}"</div>
+        <div class="pkmn-divider"></div>
+
+        <div class="pkmn-section">
+          <div class="pkmn-section-title">⚔️ Stärken</div>
+          <ul class="pkmn-list">${p.strengths.map(s => '<li>' + s + '</li>').join('')}</ul>
+        </div>
+
+        <div class="pkmn-section">
+          <div class="pkmn-section-title">🎯 Aufgaben</div>
+          <ul class="pkmn-list">${p.tasks.map(s => '<li>' + s + '</li>').join('')}</ul>
+        </div>
+
+        <div class="pkmn-section">
+          <div class="pkmn-section-title">🔧 Tools</div>
+          <div class="pkmn-tools">${p.tools.map(t => '<span class="pkmn-tool-tag">' + t + '</span>').join('')}</div>
+        </div>
+
+        <div class="pkmn-section">
+          <div class="pkmn-section-title">📋 Protokoll</div>
+          <ul class="pkmn-list">${p.rules.map(s => '<li>' + s + '</li>').join('')}</ul>
+        </div>
+
+        <div class="pkmn-model">⚡ ${p.model}${p.modelDetail ? '<div style="font-size:10px;color:#64748b;margin-top:2px;font-style:italic;">' + p.modelDetail + '</div>' : ''}</div>
+        <div class="pkmn-divider"></div>
+
+        <div class="pkmn-live">
+          <div class="pkmn-live-status">${cfg.icon} ${cfg.label}</div>
+          <div class="pkmn-live-mission">📜 ${key === 'dino' ? 'Letzte Entscheidung' : 'Letzte Mission'}: ${mission}</div>
+          ${key !== 'dino' ? '<div class="pkmn-live-mission">🎯 Aktuell: ' + task + '</div>' : ''}
+          ${lastLog ? '<div class="pkmn-live-time">' + timeAgo(lastLog.ts) + '</div>' : ''}
+          ${renderLog(key)}
+        </div>
+      </div>
+    </div>`;
+  }
+
+  let html = '<div id="dragons-last-update" style="font-size:12px;color:#64748b;text-align:center;width:100%;"></div>';
+  // Dino king card centered
+  html += renderPkmnCard('dino', true);
+  // Balerion full width
+  html += renderPkmnCard('balerion', true);
+  // Vhagar directly below Balerion (2nd in command — Revenue Guardian)
+  html += renderPkmnCard('vhagar', true);
+  // Sub-dragons in grid
+  html += '<div class="dragon-row">';
+  ['syrax', 'caraxes', 'meleys', 'vermithrax', 'sunfyre'].forEach(key => {
+    html += renderPkmnCard(key, false);
+  });
+  html += '</div>';
+  container.innerHTML = html;
+
+  if (activityLog && activityLog.length > 0) {
+    const newest = new Date(activityLog[activityLog.length - 1].ts);
+    const tsEl = document.getElementById('dragons-last-update');
+    if (tsEl) tsEl.textContent = 'Letztes Update: ' + newest.toLocaleString('de-DE', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' });
+  }
+}
+
+function renderDashboard(data) {
+  const container = document.getElementById('dashboard-container');
+  if (!container || !data) return;
+
+  // Build panels from data
+  let html = '';
+
+  // 1. RAIDS/PROPOSALS (ANF-3)
+  if (data.raids && data.raids.length > 0) {
+    html += '<div class="panel"><h3>⚔️ Raids & Proposals</h3>';
+    data.raids.forEach(r => {
+      const statusStyle = r.status === 'submitted' ? 'background:rgba(59,130,246,0.15);color:#93c5fd;' 
+        : r.status === 'demo_ready' ? 'background:rgba(245,158,11,0.15);color:#fcd34d;'
+        : 'background:rgba(100,116,139,0.15);color:#94a3b8;';
+      html += `<div class="project-row">
+        <span class="prio">${r.emoji || '⚔️'}</span>
+        <div style="flex:1;">
+          <div class="project-name">${r.name}</div>
+          <div style="font-size:11px;color:#64748b;margin-top:2px;">Target: ${r.target} — Bounty: ${r.bounty}</div>
+        </div>
+        <span class="project-status" style="${statusStyle}">${r.status.toUpperCase()}</span>
+        ${r.demo ? `<a href="${r.demo}" target="_blank" style="color:#3b82f6;margin-left:8px;">🔗</a>` : ''}
+      </div>`;
+    });
+    html += '</div>';
+  }
+
+  // 2. KRIEGSKASSE (ANF-5)
+  if (data.kriegskasse) {
+    const k = data.kriegskasse;
+    html += `<div class="panel">
+      <h3>💰 Kriegskasse</h3>
+      <div class="metric-grid" style="grid-template-columns: repeat(3, 1fr);">
+        <div class="metric">
+          <div class="metric-value" style="color:#3b82f6;">${k.connects}/${k.connectsTotal}</div>
+          <div class="metric-label">Connects</div>
+        </div>
+        <div class="metric">
+          <div class="metric-value" style="color:#22c55e;">€${k.einnahmen}</div>
+          <div class="metric-label">Einnahmen</div>
+        </div>
+        <div class="metric">
+          <div class="metric-value" style="color:#f59e0b;">${k.offeneProposals}</div>
+          <div class="metric-label">Offene Proposals</div>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  // 3. NEXT TARGETS (ANF-4)
+  if (data.nextTargets && data.nextTargets.length > 0) {
+    html += '<div class="panel"><h3>🎯 Next Targets</h3>';
+    data.nextTargets.forEach(t => {
+      html += `<div class="project-row">
+        <span class="prio">${t.emoji || '🎯'}</span>
+        <div style="flex:1;">
+          <div class="project-name">${t.name}</div>
+          <div style="font-size:11px;color:#64748b;margin-top:2px;">Bounty: ${t.bounty} — ${t.proposals} Proposals — ${t.note}</div>
+        </div>
+      </div>`;
+    });
+    html += '</div>';
+  }
+
+  // 4. CITY APPS STATUS (ANF-6)
+  if (data.cityApps) {
+    const c = data.cityApps;
+    html += `<div class="panel">
+      <h3>🏛️ City Apps</h3>
+      <div style="margin-bottom:12px;">
+        <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px;"><span>Status:</span><span style="color:#22c55e;">${c.status}</span></div>
+        <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px;"><span>Pilot-Gemeinde:</span><span>${c.pilot}</span></div>
+        <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px;"><span>Features:</span><span>${c.features}</span></div>
+        ${c.testerin ? `<div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px;"><span>Testerin:</span><span>${c.testerin} Bürgerin</span></div>` : ''}
+      </div>
+      <div style="font-size:12px;color:#94a3b8;margin-top:8px;">📡 ${c.lastUpdate}</div>
+      ${c.demo ? `<div style="margin-top:8px;"><a href="${c.demo}" target="_blank" style="color:#3b82f6;font-size:13px;">🔗 Live Demo</a></div>` : ''}
+    </div>`;
+  }
+
+  // 5. BLOCKER (ANF-11)
+  if (data.blocker && data.blocker.length > 0) {
+    html += '<div class="panel"><h3>⚠️ Blocker</h3>';
+    data.blocker.forEach(b => {
+      html += `<div style="padding:8px 0;border-bottom:1px solid #1e293b;font-size:13px;color:#fca5a5;">⚠️ ${b}</div>`;
+    });
+    html += '</div>';
+  }
+
+  // 6. X REVENUE SUMMARY (für schnellen Überblick)
+  if (data.xRevenue) {
+    const x = data.xRevenue;
+    html += `<div class="panel">
+      <h3>🐦 X Revenue (Schnellüberblick)</h3>
+      <div class="metric-grid">
+        <div class="metric">
+          <div class="metric-value" style="color:#1d9bf0;">${x.followers}</div>
+          <div class="metric-label">Follower (Ziel: ${x.followerGoal})</div>
+        </div>
+        <div class="metric">
+          <div class="metric-value" style="color:#ef4444;">${x.threadsPosted}</div>
+          <div class="metric-label">Threads gepostet</div>
+        </div>
+        <div class="metric">
+          <div class="metric-value" style="color:#22c55e;">€${x.monthlyAdRevenue}</div>
+          <div class="metric-label">Ad Revenue/Monat</div>
+        </div>
+      </div>
+      <div style="text-align:center;margin-top:8px;"><a href="#" onclick="showTab('xrevenue');return false;" style="color:#3b82f6;font-size:12px;">→ Vollständige Ansicht</a></div>
+    </div>`;
+  }
+
+  container.innerHTML = html;
+}
+
+function renderXRevenue(x) {
+  const container = document.getElementById('xrevenue-container');
+  if (!container || !x) return;
+
+  const followerPct = Math.min(100, (x.followers / x.followerGoal * 100)).toFixed(1);
+  const impressionPct = Math.min(100, (x.impressions3m / x.impressionGoal * 100)).toFixed(2);
+  const fmtNum = n => n >= 1000000 ? (n/1000000).toFixed(1)+'M' : n >= 1000 ? (n/1000).toFixed(1)+'K' : n;
+
+  container.innerHTML = `
+    <div class="x-header panel">
+      <h2>🐦 X Monetarisierung</h2>
+      <div class="x-account">${x.account}</div>
+      <div class="x-plan">✅ ${x.plan}</div>
+    </div>
+
+    <div class="panel">
+      <h3>📈 Fortschritt → Ad Revenue</h3>
+      <div style="margin:16px 0;">
+        <div class="x-progress-label"><span>👥 Follower</span><span>${fmtNum(x.followers)} / ${fmtNum(x.followerGoal)}</span></div>
+        <div class="x-progress-bar"><div class="x-progress-fill blue" style="width:${Math.max(2,followerPct)}%">${followerPct}%</div></div>
+      </div>
+      <div style="margin:16px 0;">
+        <div class="x-progress-label"><span>👁️ Impressionen (3 Monate)</span><span>${fmtNum(x.impressions3m)} / ${fmtNum(x.impressionGoal)}</span></div>
+        <div class="x-progress-bar"><div class="x-progress-fill gold" style="width:${Math.max(2,impressionPct)}%">${impressionPct}%</div></div>
+      </div>
+      <div style="text-align:center; margin-top:16px; padding:12px; border-radius:10px; ${x.adRevenueUnlocked ? 'background:rgba(34,197,94,0.15);color:#86efac;' : 'background:rgba(100,116,139,0.1);color:#94a3b8;'}">
+        ${x.adRevenueUnlocked ? '✅ AD REVENUE FREIGESCHALTET — $' + x.monthlyAdRevenue + '/Monat' : '🔒 Ad Revenue noch gesperrt — Follower + Impressionen aufbauen!'}
+      </div>
+    </div>
+
+    <div class="panel">
+      <h3>📊 Content-Metriken</h3>
+      <div class="metric-grid">
+        <div class="metric">
+          <div class="metric-value" style="color:#1d9bf0;">${x.threadsPosted}</div>
+          <div class="metric-label">Threads gepostet</div>
+        </div>
+        <div class="metric">
+          <div class="metric-value" style="color:#ef4444;">${x.replyJacks}</div>
+          <div class="metric-label">Reply-Jacks</div>
+        </div>
+        <div class="metric">
+          <div class="metric-value" style="color:#f59e0b;">${fmtNum(x.avgImpressionsPerThread)}</div>
+          <div class="metric-label">⌀ Impressions/Thread</div>
+        </div>
+        <div class="metric">
+          <div class="metric-value" style="color:#22c55e;">€${x.monthlyAdRevenue}</div>
+          <div class="metric-label">Ad Revenue/Monat</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h3>🎯 Meilensteine</h3>
+      ${x.milestones.map(m => `
+        <div class="x-milestone">
+          <span class="ms-icon">${m.done ? '✅' : '⬜'}</span>
+          <span style="${m.done ? 'text-decoration:line-through;color:#64748b;' : ''}">${m.name}</span>
+        </div>
+      `).join('')}
+    </div>
+
+    <div class="panel" style="grid-column: 1 / -1;">
+      <h3>🔄 Das Flywheel</h3>
+      <div class="x-flywheel">
+        <span class="x-flywheel-step" style="background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);">❤️ Meleys scannt 24/7 AI News</span>
+        <span class="x-flywheel-arrow">→</span>
+        <span class="x-flywheel-step" style="background:rgba(168,85,247,0.15);border:1px solid rgba(168,85,247,0.3);">✍️ Threads schreiben</span>
+        <span class="x-flywheel-arrow">→</span>
+        <span class="x-flywheel-step" style="background:rgba(29,155,240,0.15);border:1px solid rgba(29,155,240,0.3);">📈 Impressionen (Premium-Boost)</span>
+        <span class="x-flywheel-arrow">→</span>
+        <span class="x-flywheel-step" style="background:rgba(245,158,11,0.15);border:1px solid rgba(245,158,11,0.3);">👥 Follower wachsen</span>
+        <span class="x-flywheel-arrow">→</span>
+        <span class="x-flywheel-step" style="background:rgba(34,197,94,0.15);border:1px solid rgba(34,197,94,0.3);">💰 Ad Revenue + Kunden</span>
+      </div>
+      <div style="text-align:center; font-size:12px; color:#64748b; margin-top:8px;">
+        Premium-Vorteil: Reply Priority → unsere Antworten auf @OpenAI, @AnthropicAI etc. werden OBEN angezeigt
+      </div>
+    </div>
+
+    <div class="panel">
+      <h3>⚔️ Strategie & Actions</h3>
+      ${x.strategy.map(s => `
+        <div class="x-strategy-item">
+          <span>${s.icon}</span>
+          <span style="flex:1;">${s.action}</span>
+          <span class="x-strategy-status ${s.status}">${s.status === 'active' ? '🟢 Aktiv' : '⏳ TODO'}</span>
+        </div>
+      `).join('')}
+    </div>
+
+    <div class="panel">
+      <h3>💰 Revenue Streams</h3>
+      ${x.revenueStreams.map(r => `
+        <div class="x-revenue-card ${r.status}">
+          <span style="font-size:20px;">${r.status === 'locked' ? '🔒' : '✅'}</span>
+          <div style="flex:1;">
+            <div style="font-weight:600;">${r.name}</div>
+            <div style="font-size:12px;color:#64748b;">${r.requirement}</div>
+          </div>
+          <span class="x-revenue-type ${r.type}">${r.type}</span>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+// Parse JSONL: each line = one JSON object
+function parseJSONL(text) {
+  return text.trim().split('\n').filter(l => l.trim()).map(l => { try { return JSON.parse(l); } catch(e) { return null; } }).filter(Boolean);
+}
+
+// Get latest entry per dragon from JSONL
+function latestPerDragon(entries) {
+  const map = {};
+  entries.forEach(e => { if (e.dragon) map[e.dragon] = e; });
+  return map;
+}
+
+function refreshAll() {
+  Promise.all([
+    fetch('data.json?' + Date.now()).then(r => r.json()),
+    fetch('logs/dragon-status.jsonl?' + Date.now()).then(r => r.text()).catch(() => ''),
+    fetch('logs/activity.jsonl?' + Date.now()).then(r => r.text()).catch(() => '')
+  ]).then(([data, statusRaw, activityRaw]) => {
+    // Parse logs — activity.jsonl is the SINGLE SOURCE OF TRUTH
+    const statusLog = parseJSONL(statusRaw);
+    const activityLog = parseJSONL(activityRaw);
+
+    // Pipe live status into _liveStatus/_liveTask (highest priority for rendering)
+    const latestStatus = latestPerDragon(statusLog);
+    Object.keys(latestStatus).forEach(dragon => {
+      if (data.dragons && data.dragons[dragon]) {
+        const ls = latestStatus[dragon];
+        if (ls.status) data.dragons[dragon]._liveStatus = ls.status;
+        if (ls.task) data.dragons[dragon]._liveTask = ls.task;
+        if (ls.model) data.dragons[dragon].model = ls.model;
+        if (ls.ts) data.dragons[dragon].lastStatusUpdate = ls.ts;
+      }
+    });
+
+    // Store activity log for dragon card rendering
+    data._activityLog = activityLog;
+
+    cachedData = data;
+    renderOrgChart(data.dragons, activityLog);
+    renderDragons(data.dragons, activityLog);
+    renderDashboard(data);
+    if (data.xRevenue) renderXRevenue(data.xRevenue);
+    renderActivityFeed(activityLog);
+
+    // Global "last refresh" indicator + data timestamp (ANF-9)
+    const ts = new Date();
+    const el = document.getElementById('global-last-refresh');
+    if (el) {
+      const dataTs = data.lastUpdate ? new Date(data.lastUpdate).toLocaleString('de-DE', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' }) : '—';
+      el.innerHTML = `Daten: <span style="color:#22c55e;">${dataTs}</span> | Auto-Refresh: ${ts.toLocaleString('de-DE', { hour:'2-digit', minute:'2-digit', second:'2-digit' })}`;
+    }
+  }).catch(err => { console.error('refreshAll error:', err); });
+}
+
+// Activity feed state
+let currentFeedFilter = 'all';
+let cachedActivityLog = [];
+
+function filterFeed(dragon) {
+  currentFeedFilter = dragon;
+  document.querySelectorAll('.feed-filter').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+  renderActivityFeed(cachedActivityLog);
+}
+
+// Render live activity feed from activity.jsonl (SINGLE SOURCE OF TRUTH)
+function renderActivityFeed(activityLog) {
+  const container = document.getElementById('activity-feed');
+  if (!container) return;
+  cachedActivityLog = activityLog;
+
+  const DRAGON_COLORS = { balerion: '#e2e8f0', vhagar: '#60a5fa', syrax: '#67e8f9', caraxes: '#f87171', vermithrax: '#fb923c', meleys: '#fca5a5', sunfyre: '#fcd34d' };
+  const DRAGON_EMOJI = { balerion: '🖤', vhagar: '💰', syrax: '🩵', caraxes: '🔴', vermithrax: '🛡️', meleys: '❤️', sunfyre: '✨' };
+
+  const entries = [];
+  (activityLog || []).forEach(a => {
+    const icons = { takeoff: '🛫', landing: '🛬', thread: '📝', 'reply-jack': '⚔️', summary: '📋', patrol: '🔍', status: '🔄', system: '🔧' };
+    const icon = icons[a.type] || '📌';
+    const detail = a.type === 'takeoff' ? '🛫 ' + (a.topic || a.mission || '')
+      : a.type === 'landing' ? '🛬 ' + (a.topic || a.mission || '')
+      : a.type === 'reply-jack' ? 'Reply-Jack auf ' + (a.target||'?') + (a.postViews ? ' (' + a.postViews.toLocaleString() + ' Views)' : '')
+      : a.type === 'thread' ? 'Thread: ' + (a.topic||'') + (a.tweets ? ' (' + a.tweets + ' Tweets)' : '')
+      : a.type === 'patrol' ? 'Patrol — ' + (a.findings||0) + ' Findings' + (a.threadPosted ? ' → Thread!' : '') + (a.blocker ? ' ⚠️ ' + a.blocker : '') + (a.note ? ' — ' + a.note : '')
+      : a.type === 'system' ? '🔧 ' + (a.topic || '')
+      : a.topic || a.note || a.type;
+    entries.push({ ts: a.ts, dragon: a.dragon, icon, detail, url: a.url });
+  });
+
+  entries.sort((a, b) => new Date(b.ts) - new Date(a.ts));
+
+  // Filter
+  const filtered = currentFeedFilter === 'all' ? entries : entries.filter(e => e.dragon === currentFeedFilter);
+  const display = filtered.slice(0, 50);
+
+  container.innerHTML = display.length === 0
+    ? '<div style="color:#475569;padding:20px;text-align:center;">Keine Einträge' + (currentFeedFilter !== 'all' ? ' für ' + currentFeedFilter : '') + '</div>'
+    : display.map(e => {
+      const time = new Date(e.ts).toLocaleString('de-DE', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' });
+      const color = DRAGON_COLORS[e.dragon] || '#94a3b8';
+      const emoji = DRAGON_EMOJI[e.dragon] || '🐉';
+      return '<div style="display:flex;gap:8px;padding:8px 0;border-bottom:1px solid #1e293b;font-size:13px;align-items:baseline;">'
+        + '<span style="color:#64748b;min-width:90px;font-family:monospace;font-size:12px;">' + time + '</span>'
+        + '<span>' + e.icon + '</span>'
+        + '<span style="color:' + color + ';min-width:90px;display:inline-flex;align-items:center;gap:3px;">' + avatarHTML(e.dragon, 'sm') + emoji + ' ' + (e.dragon||'') + '</span>'
+        + '<span style="flex:1;">' + (e.detail||'') + '</span>'
+        + (e.url ? '<a href="' + e.url + '" target="_blank" style="color:#3b82f6;font-size:12px;">🔗</a>' : '')
+        + '</div>';
+    }).join('');
+}
+
+// Init + auto-refresh (Mission Control must always show current data)
+refreshAll();
+injectStaticAvatars();
+setInterval(refreshAll, 30 * 1000);
+
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden) refreshAll();
+});
+</script>
+
+</body>
+</html>
