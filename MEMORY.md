@@ -1104,3 +1104,14 @@ projects/XXXX_projektname/
 ## 📋 Impressum-Vorlage
 
 *Siehe Firmen-Setup oben. Für Impressum immer diese Daten + projekt-spezifische Email verwenden.*
+
+### Security: Git Pre-Commit Hook (2026-02-13) ⭐⭐⭐
+> xAI Key wurde ins öffentliche Repo gepusht und revoked. NIE WIEDER.
+> 
+> **Schutzmaßnahmen jetzt aktiv:**
+> 1. `.gitignore`: secrets/, *.db, tools/*/cache/
+> 2. **Pre-Commit Hook** in `.git/hooks/pre-commit` — blockt xAI, OpenAI, GitHub, Google, AWS Keys + JSON password/api_key Patterns
+> 3. Keys NUR in `secrets/accounts.json` (lokal) und ENV-Vars
+> 
+> **Bei JEDEM neuen Repo:** Sofort .gitignore + pre-commit hook einrichten. Keine Ausnahmen.
+> **Git Remote:** `https://github.com/United-DigiArt-Vision/jonny-lab.git`
