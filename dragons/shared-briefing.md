@@ -33,6 +33,12 @@
 - Blogwatcher hat Timeouts (intermittierend)
 - Brave Search Free Plan = 1 req/sec Rate Limit
 
+## 📰 Freshness-Regel für Meleys (PFLICHT!)
+- **NUR News < 3 Stunden alt als Top-Finding melden**
+- Alles ältere = SKIP (auch wenn Score hoch ist)
+- Wenn eine Story gestern Abend schon viral war → ist sie NICHT mehr "breaking"
+- Dino liest selbst aktiv — er braucht NUR echte Neuigkeiten
+
 ## 💡 Neue Erkenntnisse
 
 - Figure Roboter: 67h autonom, 1 Fehler. Neural Net ersetzt 109k Zeilen C++.
