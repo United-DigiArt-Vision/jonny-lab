@@ -37,3 +37,13 @@ secrets/
 *.db-shm
 *.db.lock
 tools/*/cache/
+
+# Embedded repos (formerly broken submodules)
+compliance-ai-demo/
+doc-form-automation-demo/
+jonny-lab-repo/
+mission-control/
+projects/0003_city-apps/poxdorf/
+projects/github-contributions/hive-n8n/
+projects/github-contributions/openagents-n8n/
+projects/hive-n8n-integration/
