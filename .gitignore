@@ -42,7 +42,10 @@ tools/*/cache/
 compliance-ai-demo/
 doc-form-automation-demo/
 jonny-lab-repo/
-mission-control/
+# mission-control: allow HTML/static, ignore sensitive data
+mission-control/logs/
+mission-control/*.db
+mission-control/*.db-*
 projects/0003_city-apps/poxdorf/
 projects/github-contributions/hive-n8n/
 projects/github-contributions/openagents-n8n/
