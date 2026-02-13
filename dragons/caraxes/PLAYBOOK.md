@@ -41,6 +41,12 @@
 - [ ] **Cross-Check:** Daten in der Ausgabe = Daten in der Quelle?
 - [ ] **Änderungen ÜBERALL durchgezogen?** (Wenn ich X ändere, wo wird X noch referenziert?)
 
+### 3.5 Edit-Verifikation — NACH JEDEM EDIT!
+- [ ] **Diff-Check:** Nach jedem `Edit`-Aufruf die betroffene Datei lesen und verifizieren dass NUR die beabsichtigte Stelle geändert wurde
+- [ ] **Kein Kollateralschaden:** Keine versehentlich gelöschten Zeilen, keine doppelten Blöcke, keine falschen Matches
+- [ ] **Bei großen Dateien (>200 Zeilen):** Besonders aufpassen — ähnliche Code-Blöcke können zu falschen Matches führen. Im Zweifel: mehr Kontext im `oldText` mitgeben
+- [ ] **Bei Fehler:** Sofort korrigieren, nicht weitermachen und hoffen
+
 ### 4. Erst wenn ALLES passt → abliefern
 
 **NIEMALS:**
